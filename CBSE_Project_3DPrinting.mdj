@@ -1,0 +1,50 @@
+{
+  "_type": "Project",
+  "_id": "project",
+  "name": "CBSE_Project_3DPrinting",
+  "ownedElements": [
+    {
+      "_id": "domain-model",
+      "_type": "UMLModel",
+      "name": "1. Domain Model",
+      "ownedElements": []
+    },
+    {
+      "_id": "use-case-model",
+      "_type": "UMLModel",
+      "name": "2. Use-Case Model",
+      "ownedElements": []
+    },
+    {
+      "_id": "business-type-model",
+      "_type": "UMLModel",
+      "name": "3. Business Type Model",
+      "ownedElements": []
+    },
+    {
+      "_id": "bo-interface-model",
+      "_type": "UMLModel",
+      "name": "4. Business Object Interface Model",
+      "ownedElements": []
+    },
+    {
+      "_id": "component-spec",
+      "_type": "UMLModel",
+      "name": "5. Component Specification",
+      "ownedElements": []
+    },
+    {
+      "_id": "component-arch",
+      "_type": "UMLModel",
+      "name": "6. Component Architecture",
+      "ownedElements": []
+    },
+    {
+      "_id": "interaction-analysis",
+      "_type": "UMLModel",
+      "name": "7. Component Interaction Analysis",
+      "ownedElements": []
+    }
+  ],
+  "extensions": []
+}
