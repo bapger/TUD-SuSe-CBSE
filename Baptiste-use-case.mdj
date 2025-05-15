@@ -573,7 +573,7 @@
 											"font": "Arial;13;0",
 											"left": 481,
 											"top": 99,
-											"width": 80.814453125,
+											"width": 80,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxHw4479zCcU="
@@ -1050,7 +1050,7 @@
 											"font": "Arial;13;0",
 											"left": 723.5,
 											"top": 92.5,
-											"width": 170.36083984375,
+											"width": 169,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxImw8b/0rkQ="
@@ -1346,7 +1346,7 @@
 											"font": "Arial;13;0",
 											"left": 556,
 											"top": 212.5,
-											"width": 173.21728515625,
+											"width": 172,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxIpUvMCSiaw="
@@ -1642,7 +1642,7 @@
 											"font": "Arial;13;0",
 											"left": 872,
 											"top": 164.5,
-											"width": 77.16455078125,
+											"width": 77,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxIrgOMDRsXY="
@@ -1936,7 +1936,7 @@
 											"font": "Arial;13;0",
 											"left": 918.5,
 											"top": 252.5,
-											"width": 107.5126953125,
+											"width": 107,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxIsRcsEQoZ0="
@@ -4495,7 +4495,7 @@
 											"font": "Arial;13;0",
 											"left": 857,
 											"top": 404.5,
-											"width": 158.103515625,
+											"width": 157,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxJQD3gHylJ8="
@@ -5632,7 +5632,7 @@
 											"font": "Arial;13;0",
 											"left": 523.5,
 											"top": 676.5,
-											"width": 169.6181640625,
+											"width": 168,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxJTlwg8nNDk="
@@ -6030,7 +6030,7 @@
 											"font": "Arial;13;0",
 											"left": 693.5,
 											"top": 588.5,
-											"width": 103.92626953125,
+											"width": 103,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxJokl1qmMHo="
@@ -7054,7 +7054,7 @@
 											"font": "Arial;13;0",
 											"left": 1470.5,
 											"top": 260.5,
-											"width": 145.078125,
+											"width": 144,
 											"height": 25,
 											"stereotypeLabel": {
 												"$ref": "AAAAAAGWxMGbW0gpiKE="
