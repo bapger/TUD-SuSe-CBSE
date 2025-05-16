@@ -24119,8 +24119,13 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
+<<<<<<< HEAD
 									"left": 392,
 									"top": -64,
+=======
+									"left": 400,
+									"top": -72,
+>>>>>>> fc540989796ca7625ac281a91382f6463c5d2113
 									"width": 10,
 									"height": 10
 								},
@@ -24135,8 +24140,13 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
+<<<<<<< HEAD
 									"left": 392,
 									"top": -64,
+=======
+									"left": 400,
+									"top": -72,
+>>>>>>> fc540989796ca7625ac281a91382f6463c5d2113
 									"width": 10,
 									"height": 10
 								}
@@ -24297,7 +24307,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 496,
-									"top": -64,
+									"top": -80,
 									"width": 10,
 									"height": 10
 								},
@@ -24313,7 +24323,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 496,
-									"top": -64,
+									"top": -80,
 									"width": 10,
 									"height": 10
 								}
@@ -24474,7 +24484,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 536,
-									"top": -16,
+									"top": -32,
 									"width": 10,
 									"height": 10
 								},
@@ -24490,7 +24500,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 536,
-									"top": -16,
+									"top": -32,
 									"width": 10,
 									"height": 10
 								}
@@ -24651,7 +24661,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 536,
-									"top": 37,
+									"top": 21,
 									"width": 10,
 									"height": 10
 								},
@@ -24667,7 +24677,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 536,
-									"top": 37,
+									"top": 21,
 									"width": 10,
 									"height": 10
 								}
@@ -24828,7 +24838,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 552,
-									"top": 40,
+									"top": 24,
 									"width": 10,
 									"height": 10
 								},
@@ -24844,7 +24854,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 552,
-									"top": 40,
+									"top": 24,
 									"width": 10,
 									"height": 10
 								}
@@ -25005,7 +25015,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 400,
-									"top": 32,
+									"top": 16,
 									"width": 10,
 									"height": 10
 								},
@@ -25021,7 +25031,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 400,
-									"top": 32,
+									"top": 16,
 									"width": 10,
 									"height": 10
 								}
@@ -26366,7 +26376,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 448,
-									"top": -96,
+									"top": -112,
 									"width": 10,
 									"height": 10
 								},
@@ -26382,7 +26392,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 448,
-									"top": -96,
+									"top": -112,
 									"width": 10,
 									"height": 10
 								}
@@ -28670,7 +28680,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 432,
-									"top": -72,
+									"top": -88,
 									"width": 10,
 									"height": 10
 								},
@@ -28686,7 +28696,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 432,
-									"top": -72,
+									"top": -88,
 									"width": 10,
 									"height": 10
 								}
@@ -29224,7 +29234,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 400,
-									"top": -160,
+									"top": -176,
 									"width": 10,
 									"height": 10
 								},
@@ -29240,7 +29250,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 400,
-									"top": -160,
+									"top": -176,
 									"width": 10,
 									"height": 10
 								}
@@ -29394,7 +29404,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": -176,
-									"top": 200,
+									"top": 184,
 									"width": 10,
 									"height": 10
 								},
@@ -29410,7 +29420,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": -176,
-									"top": 200,
+									"top": 184,
 									"width": 10,
 									"height": 10
 								},
@@ -29426,7 +29436,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": -176,
-									"top": 200,
+									"top": 184,
 									"width": 10,
 									"height": 10
 								},
@@ -29442,7 +29452,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": -176,
-									"top": 200,
+									"top": 184,
 									"width": 10,
 									"height": 10
 								},
@@ -30418,7 +30428,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 352,
-									"top": -136,
+									"top": -152,
 									"width": 10,
 									"height": 10
 								},
@@ -30434,7 +30444,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 352,
-									"top": -136,
+									"top": -152,
 									"width": 10,
 									"height": 10
 								}
@@ -30964,8 +30974,13 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
+<<<<<<< HEAD
 									"left": 96,
 									"top": 184,
+=======
+									"left": 80,
+									"top": 168,
+>>>>>>> fc540989796ca7625ac281a91382f6463c5d2113
 									"width": 10,
 									"height": 10
 								},
@@ -30980,8 +30995,13 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
+<<<<<<< HEAD
 									"left": 96,
 									"top": 184,
+=======
+									"left": 80,
+									"top": 168,
+>>>>>>> fc540989796ca7625ac281a91382f6463c5d2113
 									"width": 10,
 									"height": 10
 								}
@@ -31404,7 +31424,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 40,
-									"top": -120,
+									"top": -136,
 									"width": 10,
 									"height": 10
 								},
@@ -31420,7 +31440,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 40,
-									"top": -120,
+									"top": -136,
 									"width": 10,
 									"height": 10
 								}
