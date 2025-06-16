@@ -3,7 +3,6 @@ package st.cbse.calculator.data;
 import java.io.Serializable;
 
 public class Result implements Serializable{
-	private test;
 
 	private static final long serialVersionUID = 7422574264557894633L;
 	
