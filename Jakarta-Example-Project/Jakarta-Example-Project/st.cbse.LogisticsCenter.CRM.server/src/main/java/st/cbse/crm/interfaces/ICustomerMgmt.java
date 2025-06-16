@@ -1,5 +1,5 @@
 package st.cbse.crm.interfaces;
 
-public class ICustomerMgmt {
+public interface ICustomerMgmt {
 
 }
