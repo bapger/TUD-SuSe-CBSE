@@ -1,5 +1,19 @@
 package st.cbse.crm.data;
 
-public class PrintingRequest {
+import jakarta.persistence.*;
+import java.util.UUID;
 
+@Entity
+public class PrintingRequest {
+    @Id
+    private UUID id = UUID.randomUUID();
+    private String description;
+
+    @ManyToOne
+    private Order order;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private Option option;
+
+    protected PrintingRequest() {}
 }

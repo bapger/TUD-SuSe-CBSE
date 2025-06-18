@@ -1,5 +1,9 @@
 package st.cbse.shipment.interfaces;
 
-public interface IShipmentMgmt {
+import jakarta.ejb.Remote;
+import java.util.UUID;
 
+@Remote
+public interface IShipmentMgmt {
+    void shipOrder(UUID orderId);
 }

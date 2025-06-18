@@ -1,5 +1,9 @@
 package st.cbse.crm.interfaces;
 
-public interface ICustomerMgmt {
+import jakarta.ejb.Remote;
+import java.util.UUID;
 
+@Remote
+public interface ICustomerMgmt {
+    UUID registerCustomer(String name, String email, String password);
 }
