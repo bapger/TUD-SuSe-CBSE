@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.Scanner;
 
 import st.cbse.crm.interfaces.ICustomerMgmt;
+import st.cbse.crm.interfaces.IManagerMgmt;
 import st.cbse.crm.interfaces.IOrderMgmt;
 import st.cbse.shipment.interfaces.IShipmentMgmt;
 
@@ -21,68 +22,75 @@ public class Client {
 
             ICustomerMgmt customerMgmt = (ICustomerMgmt) context.lookup(
                 "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.interfaces.ICustomerMgmt");
+            IManagerMgmt managerMgmt = (IManagerMgmt) context.lookup(
+                    "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.interfaces.IManagerMgmt");
             IOrderMgmt orderMgmt = (IOrderMgmt) context.lookup(
                 "ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.interfaces.IOrderMgmt");
             IShipmentMgmt shipmentMgmt = (IShipmentMgmt) context.lookup(
                 "ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.shipment.interfaces.IShipmentMgmt");
 
             UUID customerId = null;
+            UUID managerId = null;
             UUID orderId = null;
             
 
             boolean running = true;
+            
             while (running) {
-                System.out.println("\nMenu:");
-                System.out.println("1. Register a customer");
-                System.out.println("2. Create an order");
-                System.out.println("3. Ship an order");
-                System.out.println("0. Exit");
-                System.out.print("Choose an option: ");
-                String input = scanner.nextLine();
-
-                switch (input) {
-                    case "1":
-                        System.out.println("\n[Register Customer]");
-                        System.out.print("Name: ");
-                        String name = scanner.nextLine();
-                        System.out.print("Email: ");
-                        String email = scanner.nextLine();
-                        System.out.print("Password: ");
-                        String password = scanner.nextLine();
-
-                        customerId = customerMgmt.registerCustomer(name, email, password);
-                        System.out.println("Customer registered with ID: " + customerId);
-                        break;
-
-                    case "2":
-                        if (customerId == null) {
-                            System.out.println("\n[!] Register a customer first.");
-                            break;
-                        }
-                        System.out.println("\n[Create Order]");
-                        System.out.print("Enter description of the product: ");
-                        String description = scanner.nextLine();
-                        orderId = orderMgmt.createOrder(customerId, description);
-                        System.out.println("Order created with ID: " + orderId);
-                        break;
-
-                    case "3":
-                        if (orderId == null) {
-                            System.out.println("\n[!] Create an order first.");
-                            break;
-                        }
-                        System.out.println("\n[Ship Order]");
-                        shipmentMgmt.shipOrder(orderId);
-                        System.out.println("Order " + orderId + " shipped.");
-                        break;
-
-                    case "0":
-                        running = false;
-                        break;
-
-                    default:
-                        System.out.println("Invalid choice. Try again.");
-                        break;
+                if(customerId==null && managerId == null) {
+	                System.out.println("\nMenu:");
+	                System.out.println("1. Register a customer");
+	                System.out.println("2. Login as a customer");
+	                System.out.println("3. Login as a manager");
+	                System.out.println("0. Exit");
+	                System.out.print("Choose an option: ");
+	                String input = scanner.nextLine();
+	
+	                switch (input) {
+	                    case "1":
+	                        System.out.println("\n[Register Customer]");
+	                        System.out.print("Name: ");
+	                        String name = scanner.nextLine();
+	                        System.out.print("Email: ");
+	                        String email = scanner.nextLine();
+	                        System.out.print("Password: ");
+	                        String password = scanner.nextLine();
+	
+	                        customerId = customerMgmt.registerCustomer(name, email, password);
+	                        System.out.println("Customer registered with ID: " + customerId);
+	                        break;
+	
+	                    case "2":
+	                        System.out.println("\n[Register Customer]");
+	                        System.out.print("Email: ");
+	                        String email2 = scanner.nextLine();
+	                        System.out.print("Password: ");
+	                        String password2 = scanner.nextLine();
+	                        customerId = customerMgmt.loginCustomer(email2, password2);
+	                        System.out.println("Customer registered with ID: " + customerId);
+	                        break;
+	
+	                    case "3":
+	                        System.out.println("\n[Register Manager]");
+	                        System.out.print("Email: ");
+	                        String email3 = scanner.nextLine();
+	                        System.out.print("Password: ");
+	                        String password3 = scanner.nextLine();
+	                        managerId = managerMgmt.loginManager(email3, password3);
+	                        System.out.println("Manager registered with ID: " + managerId);
+	                        break;
+	
+	                    case "0":
+	                        running = false;
+	                        break;
+	
+	                    default:
+	                        System.out.println("Invalid choice. Try again.");
+	                        break;
+	                }
+                }
+                else {
+                	
                 }
             }
             System.out.println("\n[✓] Session closed.");

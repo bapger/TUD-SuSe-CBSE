@@ -9,4 +9,6 @@ public interface ICustomerMgmt {
 
 	UUID registerCustomer(String string, String string2, String string3);
 
+	UUID loginCustomer(String email2, String password2);
+
 }
