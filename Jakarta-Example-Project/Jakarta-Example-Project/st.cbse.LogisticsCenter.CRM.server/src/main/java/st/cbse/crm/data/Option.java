@@ -9,6 +9,10 @@ import java.util.UUID;
 public abstract class Option {
     @Id
     protected UUID id = UUID.randomUUID();
+    
+    @ManyToOne
+    private PrintingRequest printingRequest;
+
 
     protected String name;
     protected String description;

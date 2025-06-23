@@ -49,4 +49,9 @@ public class Order {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public List<PrintingRequest> getPrintingRequests() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

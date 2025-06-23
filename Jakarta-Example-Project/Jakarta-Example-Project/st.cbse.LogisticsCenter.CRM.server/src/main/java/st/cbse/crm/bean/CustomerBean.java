@@ -1,5 +1,6 @@
 package st.cbse.crm.bean;
 
+import jakarta.ejb.LocalBean;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
 import java.util.UUID;
@@ -7,7 +8,8 @@ import st.cbse.crm.data.*;
 import st.cbse.crm.interfaces.ICustomerMgmt;
 
 @Stateless
-class CustomerBean implements ICustomerMgmt {
+@LocalBean
+public class CustomerBean implements ICustomerMgmt {
     @PersistenceContext
     private EntityManager em;
 
