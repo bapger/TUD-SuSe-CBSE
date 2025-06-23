@@ -1,12 +1,12 @@
-package st.cbse.crm.bean;
+package st.cbse.crm.customerComponent.beans;
 
 import jakarta.ejb.LocalBean;
 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
 import java.util.UUID;
-import st.cbse.crm.data.*;
-import st.cbse.crm.interfaces.ICustomerMgmt;
+import st.cbse.crm.customerComponent.data.*;
+import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
 
 @Stateless
 public class CustomerBean implements ICustomerMgmt {

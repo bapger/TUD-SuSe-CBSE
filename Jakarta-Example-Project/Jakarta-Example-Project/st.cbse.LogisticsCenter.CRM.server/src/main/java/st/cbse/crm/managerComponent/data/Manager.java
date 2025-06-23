@@ -1,4 +1,4 @@
-package st.cbse.crm.data;
+package st.cbse.crm.managerComponent.data;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

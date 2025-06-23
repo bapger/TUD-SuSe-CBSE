@@ -1,8 +1,9 @@
-package st.cbse.crm.data.enums;
+package st.cbse.crm.orderComponent.data;
 
 public enum OrderStatus {
     CREATED,
-    CONFIGURED,
+    COMPLETED,
     VALIDATED,
+    SHIPPED,
     REJECTED
 }

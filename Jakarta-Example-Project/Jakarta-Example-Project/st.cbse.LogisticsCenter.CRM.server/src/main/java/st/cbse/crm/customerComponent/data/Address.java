@@ -1,4 +1,4 @@
-package st.cbse.crm.data;
+package st.cbse.crm.customerComponent.data;
 
 import jakarta.persistence.Embeddable;
 

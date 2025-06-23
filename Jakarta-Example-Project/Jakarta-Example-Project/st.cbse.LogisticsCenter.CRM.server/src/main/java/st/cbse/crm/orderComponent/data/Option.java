@@ -1,6 +1,8 @@
-package st.cbse.crm.data;
+package st.cbse.crm.orderComponent.data;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -20,4 +22,19 @@ public abstract class Option {
     public UUID getId() {
         return id;
     }
+
+	public void setPrice(BigDecimal unitPrice) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setPrintingRequest(PrintingRequest pr) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Object getPrice() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

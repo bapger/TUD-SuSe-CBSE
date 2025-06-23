@@ -1,8 +1,11 @@
-package st.cbse.crm.data;
+package st.cbse.crm.orderComponent.data;
 
 import jakarta.persistence.*;
-import st.cbse.crm.data.enums.OrderStatus;
+import st.cbse.crm.customerComponent.data.Customer;
+import st.cbse.crm.orderComponent.data.OrderStatus;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
@@ -30,7 +33,7 @@ public class Order {
 		
 	}
 
-	public void setCreationDate(Date date) {
+	public void setCreationDate(LocalDateTime localDateTime) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -51,6 +54,31 @@ public class Order {
 	}
 
 	public List<PrintingRequest> getPrintingRequests() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setBasePrice(BigDecimal basePrice) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setTotal(BigDecimal basePrice) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public OrderStatus getOrderStatus() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object getTotal() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Invoice getInvoice() {
 		// TODO Auto-generated method stub
 		return null;
 	}

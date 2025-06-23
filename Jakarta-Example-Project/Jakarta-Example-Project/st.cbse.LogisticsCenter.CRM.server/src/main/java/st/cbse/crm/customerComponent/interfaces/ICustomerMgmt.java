@@ -1,4 +1,4 @@
-package st.cbse.crm.interfaces;
+package st.cbse.crm.customerComponent.interfaces;
 
 import jakarta.ejb.Remote;
 import java.util.UUID;

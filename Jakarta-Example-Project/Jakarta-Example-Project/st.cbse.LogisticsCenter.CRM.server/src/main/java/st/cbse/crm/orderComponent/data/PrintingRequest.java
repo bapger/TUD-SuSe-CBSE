@@ -1,7 +1,8 @@
-package st.cbse.crm.data;
+package st.cbse.crm.orderComponent.data;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,5 +40,35 @@ public class PrintingRequest {
 	public void addOption(Option option) {
 		options.add(option);
 		
+	}
+
+	public void setStlPath(String stlPath) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setNote(String note) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public BigDecimal getOptions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Order getOrder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getStlPath() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getNote() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

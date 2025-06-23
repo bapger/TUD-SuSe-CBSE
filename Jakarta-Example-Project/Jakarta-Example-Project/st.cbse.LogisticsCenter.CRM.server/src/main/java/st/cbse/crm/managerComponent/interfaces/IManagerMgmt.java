@@ -1,4 +1,4 @@
-package st.cbse.crm.interfaces;
+package st.cbse.crm.managerComponent.interfaces;
 
 import jakarta.ejb.Remote;
 

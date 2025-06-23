@@ -1,11 +1,11 @@
-package st.cbse.crm.bean;
+package st.cbse.crm.managerComponent.beans;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import st.cbse.crm.data.Manager;
-import st.cbse.crm.interfaces.IManagerMgmt;
+import st.cbse.crm.managerComponent.data.Manager;
+import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
 
 @Stateless
 public class ManagerBean implements IManagerMgmt{
