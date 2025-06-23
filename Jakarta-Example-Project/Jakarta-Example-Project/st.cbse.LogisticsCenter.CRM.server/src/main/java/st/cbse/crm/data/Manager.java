@@ -13,5 +13,9 @@ public class Manager {
         this.email = email;
         this.password = password;
     }
+	public Object getPassword() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
 

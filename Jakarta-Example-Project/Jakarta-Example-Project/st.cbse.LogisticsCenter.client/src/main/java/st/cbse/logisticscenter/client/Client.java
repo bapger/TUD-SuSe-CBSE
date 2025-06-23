@@ -28,6 +28,7 @@ public class Client {
 
             UUID customerId = null;
             UUID orderId = null;
+            
 
             boolean running = true;
             while (running) {
