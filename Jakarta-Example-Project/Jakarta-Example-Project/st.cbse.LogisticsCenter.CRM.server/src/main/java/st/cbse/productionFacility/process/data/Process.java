@@ -1,8 +1,9 @@
-package st.cbse.process.data;
+package st.cbse.productionFacility.process.data;
 
 import jakarta.persistence.*;
+import st.cbse.productionFacility.process.data.enums.ProcessStatus;
+
 import java.util.*;
-import st.cbse.process.data.enums.ProcessStatus;
 
 @Entity
 public class Process {

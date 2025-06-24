@@ -1,4 +1,4 @@
-package st.cbse.process.data;
+package st.cbse.productionFacility.process.data;
 
 import jakarta.persistence.*;
 

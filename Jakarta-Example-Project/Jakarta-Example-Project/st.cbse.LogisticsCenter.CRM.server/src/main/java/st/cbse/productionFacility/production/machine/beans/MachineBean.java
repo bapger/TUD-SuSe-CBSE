@@ -1,8 +1,8 @@
-package st.cbse.production.beans;
+package st.cbse.productionFacility.production.machine.beans;
 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
-import st.cbse.production.data.*;
+import st.cbse.productionFacility.production.machine.data.*;
 
 @Stateless
 class MachineBean {
