@@ -1,12 +1,13 @@
-package st.cbse.productionFacility.production.interfaces;
+package st.cbse.productionFacility.production.machine.interfaces;
 
 import java.util.List;
 import java.util.UUID;
 
-import st.cbse.productionFacility.production.machine.data.MachineStatus;
 import st.cbse.productionFacility.production.machine.data.Machine;
+import st.cbse.productionFacility.production.machine.data.MachineStatus;
 
-public interface IProductionMgmt {
+public interface IMachineMgmt {
+
     List<Machine> viewMachines();
     UUID reserveMachine(Class<? extends Machine> type, UUID processId);
     boolean programMachine(UUID machineId);
