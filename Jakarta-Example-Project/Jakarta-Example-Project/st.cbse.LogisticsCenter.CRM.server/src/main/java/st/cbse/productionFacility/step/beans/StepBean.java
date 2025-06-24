@@ -39,7 +39,7 @@ public class StepBean implements IStepMgmt {
             return false;
         }
 
-        UUID machineId = production.reserveMachineForStep(step.getType(), step.getProcessId());
+        UUID machineId = production.reserveMachine(step.getType(), step.getProcessId());
         if (machineId == null) {
             return false;                       // aucune machine dispo
         }
@@ -47,7 +47,7 @@ public class StepBean implements IStepMgmt {
         step.setMachineId(machineId);
         step.setStatus(StepStatus.IN_PROGRESS);
 
-        production.programMachine(machineId, step.getProcessId());
+        production.programMachine(machineId);
         production.executeMachine(machineId);
 
         step.setStatus(StepStatus.FINISHED);
