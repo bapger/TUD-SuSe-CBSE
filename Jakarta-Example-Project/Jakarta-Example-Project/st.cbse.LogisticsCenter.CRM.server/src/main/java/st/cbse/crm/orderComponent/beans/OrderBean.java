@@ -3,6 +3,7 @@ package st.cbse.crm.orderComponent.beans;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
 import st.cbse.crm.customerComponent.data.Customer;
+import st.cbse.crm.dto.OrderDTO;
 import st.cbse.crm.orderComponent.data.*;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 
@@ -85,7 +86,7 @@ public class OrderBean implements IOrderMgmt {
         option.setPrintingRequest(pr);
         em.persist(option);
 
-        pr.getOptions().add(option);
+        pr.add(option);
         recalcTotal(pr.getOrder());
     }
 
@@ -117,54 +118,41 @@ public class OrderBean implements IOrderMgmt {
         o.setOrderStatus(OrderStatus.COMPLETED);
     }
 
-    /* ================================================================= */
-    /* 5.  Historique (entités JPA renvoyées côté serveur uniquement)    */
-    /* ================================================================= */
+    /* ============================================================= */
+    /* 5.  Order history (DTOs, not entities)                        */
+    /* ============================================================= */
     @Override
-    public List<String> getOrderHistoryLines(UUID customerId) {
+    public List<OrderDTO> getOrdersByCustomer(UUID customerId) {
 
-        // On charge tout ce qu’il faut en une seule requête.
+        // Single SQL round-trip: join-fetch everything we need
         List<Order> orders = em.createQuery(
-            "SELECT DISTINCT o FROM Order o " +
-            "LEFT JOIN FETCH o.printingRequests pr " +
-            "LEFT JOIN FETCH pr.options " +
-            "WHERE o.customer.id = :cid ORDER BY o.creationDate DESC",
-            Order.class)
+              "SELECT DISTINCT o FROM Order o " +
+              "LEFT JOIN FETCH o.printingRequests pr " +
+              "LEFT JOIN FETCH pr.options " +
+              "WHERE o.customer.id = :cid " +
+              "ORDER BY o.creationDate DESC", Order.class)
             .setParameter("cid", customerId)
             .getResultList();
 
-        List<String> lines = new ArrayList<>();
-
-        for (Order o : orders) {
-            lines.add(String.format(
-                "Order %s   Status: %s   Total: €%s",
-                o.getId(), o.getOrderStatus(), o.getTotal()));
-
-            for (PrintingRequest pr : o.getPrintingRequests()) {
-                lines.add("  Request " + pr.getId() + "   STL=" + pr.getStlPath());
-
-                if (pr.getNote() != null && !pr.getNote().isBlank())
-                    lines.add("    Note: " + pr.getNote());
-
-                for (Option op : pr.getOptions()) {
-                    lines.add(String.format(
-                        "    %-15s  €%s",
-                        op.getClass().getSimpleName(), op.getPrice()));
-                }
-            }
-        }
-        return lines;         // ← rien d’autre que des String
+        // Map the entity graph -> immutable DTO tree
+        return orders.stream()
+                     .map(OrderDTO::of)
+                     .toList();
     }
 
     /* ================================================================= */
     /*  Helpers                                                          */
     /* ================================================================= */
     private void recalcTotal(Order order) {
+    	List<Option> ops;
         BigDecimal total = order.getBasePrice();
-        for (PrintingRequest pr : order.getPrintingRequests())
-            for (Option op : pr.getOptions())
+        for (PrintingRequest pr : order.getPrintingRequests()) {
+        	ops = (List<Option>) pr.getOptions();
+            for (Option op : ops)
                 total = total.add(op.getPrice());
+        }
         order.setTotal(total);
+        
     }
 
     private BigDecimal unitPrice(Option option) {

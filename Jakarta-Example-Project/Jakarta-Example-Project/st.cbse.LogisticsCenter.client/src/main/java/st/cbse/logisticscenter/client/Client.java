@@ -4,9 +4,13 @@ import javax.naming.*;
 import java.math.BigDecimal;
 import java.util.*;
 
-import st.cbse.crm.interfaces.ICustomerMgmt;
-import st.cbse.crm.interfaces.IManagerMgmt;
-import st.cbse.crm.interfaces.IOrderMgmt;
+import st.cbse.crm.dto.OptionDTO;
+import st.cbse.crm.dto.OrderDTO;
+import st.cbse.crm.dto.PrintRequestDTO;
+import st.cbse.crm.dto.ShipmentItemDTO;
+import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
+import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
+import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.shipment.interfaces.IShipmentMgmt;
 
 public class Client {
@@ -35,7 +39,7 @@ public class Client {
             orderMgmt    = (IOrderMgmt)    ctx.lookup(
                 "ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.interfaces.IOrderMgmt");
             shipmentMgmt = (IShipmentMgmt) ctx.lookup(
-                "ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.shipment.interfaces.IShipmentMgmt");
+                "ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipment.interfaces.IShipmentMgmt");
 
             System.out.println("=== Logistics System Client ===");
 
@@ -119,7 +123,12 @@ public class Client {
     /*  AUTH / REGISTRATION                                                  */
     /* ===================================================================== */
 
-    private static void registerCustomer() throws Exception {
+    private static void shipOrder() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void registerCustomer() throws Exception {
         System.out.println("\n[Register customer]");
         System.out.print("Full name : "); String name = in.nextLine();
         System.out.print("E-mail    : "); String email = in.nextLine();
@@ -142,22 +151,33 @@ public class Client {
         System.out.println("Logged in as manager.");
     }
 
-    /* ----------------------- Historique ------------------------------ */
+    /* ---------------- Order history ---------------- */
     private static void viewOrderHistory(UUID customerId) throws Exception {
-        List<Order> orders = orderMgmt.getOrdersByCustomer(customerId);
-        if (orders.isEmpty()) { System.out.println("No orders yet."); return; }
 
-        for (Order o : orders) {
-            System.out.printf("\nOrder %s  Status: %s  Total: €%s%n",
-                              o.getId(), o.getOrderStatus(), o.getTotal());
-            for (PrintingRequest pr : o.getPrintingRequests()) {
+        List<OrderDTO> orders = orderMgmt.getOrdersByCustomer(customerId);
+
+        if (orders.isEmpty()) {
+            System.out.println("No orders yet.");
+            return;
+        }
+
+        /* Simple pretty-print of the immutable DTO hierarchy */
+        for (OrderDTO o : orders) {
+
+            System.out.printf(
+                "\nOrder %s  Status: %s  Total: €%s%n",
+                o.getId(), o.getStatus(), o.getTotal());
+
+            for (PrintRequestDTO pr : o.getPrintingRequests()) {
                 System.out.println("  Request " + pr.getId()
                                    + "   STL=" + pr.getStlPath());
+
                 if (pr.getNote() != null && !pr.getNote().isBlank())
                     System.out.println("    Note: " + pr.getNote());
-                for (Option op : pr.getOptions()) {
+
+                for (OptionDTO op : pr.getOptions()) {
                     System.out.printf("    %-15s  €%s%n",
-                                      op.getClass().getSimpleName(), op.getPrice());
+                                      op.getType(), op.getPrice());
                 }
             }
         }
@@ -249,7 +269,7 @@ public class Client {
         System.out.println("Request marked finished.");
     }
 
-    private static void shipOrder() throws Exception {
+    /*private static void shipOrder() throws Exception {
         System.out.print("Order id to ship: ");
         UUID orderId = UUID.fromString(in.nextLine());
         System.out.print("Customer address: ");
@@ -259,7 +279,7 @@ public class Client {
         ShipmentDTO dto = new ShipmentDTO(addr, track);
         managerMgmt.shipOrder(orderId, dto);
         System.out.println("Order shipped.");
-    }
+    }*/
 
     private static void viewStorage() throws Exception {
         List<ShipmentItemDTO> items = shipmentMgmt.itemsInStorage();

@@ -1,30 +1,24 @@
 package st.cbse.crm.orderComponent.data;
 
-import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
 public class PrintingRequest {
 
-    @Id
     private UUID id = UUID.randomUUID();
 
     private String description;
 
-    /* --- nouvelles données requises par le modèle --- */
     private String stlPath;           // chemin/URI du fichier STL
-    @Column(length = 1024)
+
     private String note;              // note libre du client
 
-    /* --- relations --- */
-    @ManyToOne
+
     private Order order;
 
-    @OneToMany(mappedBy = "printingRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Option> options = new ArrayList<>();
 
     /* -------------------------------------------------- */

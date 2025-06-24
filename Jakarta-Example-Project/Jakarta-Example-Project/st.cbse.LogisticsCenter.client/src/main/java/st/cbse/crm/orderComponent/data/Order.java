@@ -1,6 +1,5 @@
 package st.cbse.crm.orderComponent.data;
 
-import jakarta.persistence.*;
 import st.cbse.crm.customerComponent.data.Customer;
 import st.cbse.crm.orderComponent.data.OrderStatus;
 
@@ -8,27 +7,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Entity
 public class Order {
-	@Id
 	private UUID id = UUID.randomUUID();
 
-	/* ------------ relations ------------ */
-	@ManyToOne(optional = false)
 	private Customer customer;
 
-	@OneToMany(mappedBy = "order",
-	           cascade = CascadeType.ALL,
-	           orphanRemoval = true)
 	private List<PrintingRequest> printingRequests = new ArrayList<>();
 
-	@OneToOne(mappedBy = "order",
-	          cascade = CascadeType.ALL,
-	          orphanRemoval = true)
 	private Invoice invoice;
 
-	/* ------------ business data ------------ */
-	@Enumerated(EnumType.STRING)
 	private OrderStatus orderStatus;
 
 	private BigDecimal basePrice = BigDecimal.ZERO;
