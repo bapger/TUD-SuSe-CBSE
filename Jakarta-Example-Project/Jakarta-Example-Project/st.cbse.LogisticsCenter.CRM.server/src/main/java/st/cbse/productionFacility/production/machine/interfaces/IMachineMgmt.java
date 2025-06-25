@@ -3,9 +3,11 @@ package st.cbse.productionFacility.production.machine.interfaces;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.ejb.Remote;
 import st.cbse.productionFacility.production.machine.data.Machine;
 import st.cbse.productionFacility.production.machine.data.MachineStatus;
 
+@Remote
 public interface IMachineMgmt {
 
     List<Machine> viewMachines();
