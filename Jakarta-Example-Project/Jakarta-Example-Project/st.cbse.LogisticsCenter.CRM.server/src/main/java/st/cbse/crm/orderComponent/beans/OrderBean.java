@@ -197,20 +197,18 @@ public class OrderBean implements IOrderMgmt {
         if (orderId == null) {
             throw new IllegalArgumentException("Order ID cannot be null");
         }
-        
+
+        // strict-JPA : pas d’alias sur le fetch-join
         Order order = em.createQuery(
-                "SELECT o FROM Order o " +
-                "LEFT JOIN FETCH o.printingRequests pr " +
-                "LEFT JOIN FETCH pr.options " +
-                "WHERE o.id = :id", Order.class)
+                "SELECT DISTINCT o " +
+                "FROM   Order o " +
+                "LEFT   JOIN FETCH o.printingRequests " +   // OK sans alias
+                "WHERE  o.id = :id",
+                Order.class)
             .setParameter("id", orderId)
-            .getSingleResult();
-        
-        if (order == null) {
-            throw new NoResultException("Order not found with ID: " + orderId);
-        }
-        
-        return OrderDTO.of(order);
+            .getSingleResult();           // NoResultException propagée si rien
+
+        return OrderDTO.of(order);        // mapping entité → DTO
     }
 
 }
