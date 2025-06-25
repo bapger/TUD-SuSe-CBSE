@@ -105,6 +105,7 @@ public class Client {
         System.out.println("4  Ship order");
         System.out.println("5  View finished items in storage");
         System.out.println("6  Logout");
+        System.out.println("7  View finished items in storage");
         System.out.println("0  Exit");
         System.out.print("> ");
         switch (in.nextLine()) {
@@ -114,6 +115,7 @@ public class Client {
             case "4": shipOrder();                     return true;
             case "5": viewStorage();                   return true;
             case "6": loggedManager = null;            return true;
+            case "7": sendPrintToProd();            return true;
             case "0": return false;
             default:  System.out.println("Invalid choice."); return true;
         }
