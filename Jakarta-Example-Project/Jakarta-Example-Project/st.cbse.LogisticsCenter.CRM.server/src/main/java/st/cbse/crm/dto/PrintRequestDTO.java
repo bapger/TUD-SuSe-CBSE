@@ -13,17 +13,16 @@ public class PrintRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final UUID            id;
+    private final UUID			  orderId;
     private final String          stlPath;
     private final String          note;
     private final List<OptionDTO> options;
     private final BigDecimal      price;      // ← new
 
-    public PrintRequestDTO(UUID id,
-                           String stlPath,
-                           String note,
-                           List<OptionDTO> options) {
+    public PrintRequestDTO(UUID id, UUID orderId, String stlPath, String note, List<OptionDTO> options) {
 
         this.id       = id;
+        this.orderId  = orderId;
         this.stlPath  = stlPath;
         this.note     = note;
         this.options  = List.copyOf(options);
@@ -50,6 +49,7 @@ public class PrintRequestDTO implements Serializable {
                                        .collect(Collectors.toList());
 
         return new PrintRequestDTO(pr.getId(),
+        						   pr.getOrderId(),
                                    pr.getStlPath(),
                                    pr.getNote(),
                                    optionDtos);

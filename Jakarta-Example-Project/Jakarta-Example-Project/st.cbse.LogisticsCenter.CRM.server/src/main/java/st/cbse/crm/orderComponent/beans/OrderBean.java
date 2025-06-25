@@ -47,6 +47,7 @@ public class OrderBean implements IOrderMgmt {
 
         PrintingRequest pr = new PrintingRequest();
         pr.setOrder(order);
+        pr.setOrderId(orderId);
         pr.setStlPath(stlPath);
         pr.setNote(note);
         em.persist(pr);

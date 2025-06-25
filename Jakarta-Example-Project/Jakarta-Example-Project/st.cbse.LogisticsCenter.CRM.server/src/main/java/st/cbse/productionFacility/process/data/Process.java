@@ -20,6 +20,8 @@ public class Process {
     
     private UUID printRequestId;
     
+    private UUID orderId;
+    
     private int currentStepIndex = 0;
     
     protected Process() {}
@@ -45,7 +47,27 @@ public class Process {
         this.steps.add(step);
     }
     
-    public ProcessStep getCurrentStep() {
+    public UUID getOrderId() {
+		return orderId;
+	}
+
+	public void setOrderId(UUID orderId) {
+		this.orderId = orderId;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
+	}
+
+	public void setPrintRequestId(UUID printRequestId) {
+		this.printRequestId = printRequestId;
+	}
+
+	public void setCurrentStepIndex(int currentStepIndex) {
+		this.currentStepIndex = currentStepIndex;
+	}
+
+	public ProcessStep getCurrentStep() {
         if (currentStepIndex >= 0 && currentStepIndex < steps.size()) {
             return steps.get(currentStepIndex);
         }
