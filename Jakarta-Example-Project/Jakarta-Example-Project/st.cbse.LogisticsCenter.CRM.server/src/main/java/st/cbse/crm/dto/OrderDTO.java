@@ -54,7 +54,23 @@ public class OrderDTO implements Serializable {
                             reqDtos);
     }
 
-    /* ---------------- getters ---------------- */
+    public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public LocalDateTime getCreationDate() {
+		return creationDate;
+	}
+
+	public List<PrintRequestDTO> getPrintingRequests() {
+		return printingRequests;
+	}
+
+	/* ---------------- getters ---------------- */
     public UUID getId()                       { return id; }
     public String getStatus()                 { return status; }
     public String getCustomer(){return customerName;}

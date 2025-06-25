@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import jakarta.ejb.Remote;
 import st.cbse.crm.dto.OrderDTO;
+import st.cbse.crm.dto.PrintRequestDTO;
 
 @Remote
 public interface IOrderMgmt {
@@ -25,5 +26,8 @@ public interface IOrderMgmt {
 	void pay(UUID orderId, String txnRef);
 
 	List<OrderDTO> getOrdersByCustomer(UUID customerId);
+	
+	PrintRequestDTO getPrintRequestDTO(UUID printingRequestId);
+	OrderDTO getOrderDTO(UUID orderId);
 
 }

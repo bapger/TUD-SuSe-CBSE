@@ -4,6 +4,7 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
 import st.cbse.crm.customerComponent.data.Customer;
 import st.cbse.crm.dto.OrderDTO;
+import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.orderComponent.data.*;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 
@@ -167,4 +168,48 @@ public class OrderBean implements IOrderMgmt {
         if (option instanceof Engraving)  return new BigDecimal("6.00");
         return BigDecimal.ZERO;
     }
+    
+    @Override
+    public PrintRequestDTO getPrintRequestDTO(UUID printingRequestId) {
+        if (printingRequestId == null) {
+            throw new IllegalArgumentException("PrintingRequest ID cannot be null");
+        }
+        
+        // Récupérer la PrintingRequest avec ses options en une seule requête
+        PrintingRequest printRequest = em.createQuery(
+                "SELECT pr FROM PrintingRequest pr " +
+                "LEFT JOIN FETCH pr.options " +
+                "WHERE pr.id = :id", PrintingRequest.class)
+            .setParameter("id", printingRequestId)
+            .getSingleResult();
+        
+        if (printRequest == null) {
+            throw new NoResultException("PrintingRequest not found with ID: " + printingRequestId);
+        }
+        
+        // Convertir en DTO en utilisant la méthode statique of()
+        return PrintRequestDTO.of(printRequest);
+    }
+    
+    @Override
+    public OrderDTO getOrderDTO(UUID orderId) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("Order ID cannot be null");
+        }
+        
+        Order order = em.createQuery(
+                "SELECT o FROM Order o " +
+                "LEFT JOIN FETCH o.printingRequests pr " +
+                "LEFT JOIN FETCH pr.options " +
+                "WHERE o.id = :id", Order.class)
+            .setParameter("id", orderId)
+            .getSingleResult();
+        
+        if (order == null) {
+            throw new NoResultException("Order not found with ID: " + orderId);
+        }
+        
+        return OrderDTO.of(order);
+    }
+
 }
