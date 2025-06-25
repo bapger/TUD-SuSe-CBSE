@@ -234,17 +234,17 @@ public class ProductionBean implements IProductionMgmt {
         em.merge(transport);
     }
 
-    @Schedule(hour="*", minute="*", second="*/10", persistent=false)
-    public void checkPendingTransports() {
-        List<Transport> pendingTransports = em.createQuery(
-            "SELECT t FROM Transport t WHERE t.status = :status ORDER BY t.createdAt",
-            Transport.class)
-            .setParameter("status", TransportStatus.PENDING)
-            .setMaxResults(5)
-            .getResultList();
-            
-        LOG.fine("Checking " + pendingTransports.size() + " pending transports");
-    }
+//    @Schedule(hour="*", minute="*", second="*/30", persistent=false)
+//    public void checkPendingTransports() {
+//        List<Transport> pendingTransports = em.createQuery(
+//            "SELECT t FROM Transport t WHERE t.status = :status ORDER BY t.createdAt",
+//            Transport.class)
+//            .setParameter("status", TransportStatus.PENDING)
+//            .setMaxResults(5)
+//            .getResultList();
+//            
+//        LOG.fine("Checking " + pendingTransports.size() + " pending transports");
+//    }
 
     private String mapStepToMachineType(Step step) {
         if (step.getType() == null) {
