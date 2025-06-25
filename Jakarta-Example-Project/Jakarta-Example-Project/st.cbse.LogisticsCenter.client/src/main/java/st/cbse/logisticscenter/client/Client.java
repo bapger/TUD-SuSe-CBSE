@@ -11,7 +11,7 @@ import st.cbse.crm.dto.ShipmentItemDTO;
 import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
 import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
-import st.cbse.shipment.interfaces.IShipmentMgmt;
+import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
 
 public class Client {
 
@@ -33,13 +33,13 @@ public class Client {
             InitialContext ctx = getContext();
 
             customerMgmt = (ICustomerMgmt) ctx.lookup(
-                "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.interfaces.ICustomerMgmt");
+                "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.customerComponent.interfaces.ICustomerMgmt");
             managerMgmt  = (IManagerMgmt)  ctx.lookup(
-                "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.interfaces.IManagerMgmt");
+                "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.managerComponent.interfaces.IManagerMgmt");
             orderMgmt    = (IOrderMgmt)    ctx.lookup(
-                "ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.interfaces.IOrderMgmt");
+                "ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.orderComponent.interfaces.IOrderMgmt");
             shipmentMgmt = (IShipmentMgmt) ctx.lookup(
-                "ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipment.interfaces.IShipmentMgmt");
+                "ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt");
 
             System.out.println("=== Logistics System Client ===");
 
@@ -140,15 +140,26 @@ public class Client {
         System.out.println("\n[Customer login]");
         System.out.print("E-mail   : "); String email = in.nextLine();
         System.out.print("Password : "); String pw    = in.nextLine();
-        loggedCustomer = customerMgmt.loginCustomer(email, pw);
-        System.out.println("Welcome back!");
+        try {
+	        loggedCustomer = customerMgmt.loginCustomer(email, pw);
+	        System.out.println("logged as a Customer !");
+	    }catch(Exception ex) {
+	    	System.out.println("bad credentials");
+	    	loggedCustomer = null;
+	    }
     }
     private static void loginManager() throws Exception {
         System.out.println("\n[Manager login]");
         System.out.print("E-mail   : "); String email = in.nextLine();
         System.out.print("Password : "); String pw    = in.nextLine();
-        loggedManager = managerMgmt.loginManager(email, pw);
-        System.out.println("Logged in as manager.");
+        try {
+            loggedManager = managerMgmt.loginManager(email, pw);
+            System.out.println("Logged in as manager.");
+        }catch(Exception ex) {
+        	System.out.println("bad credentials");
+        	loggedManager =null;
+        }
+
     }
 
     /* ---------------- Order history ---------------- */
@@ -207,11 +218,13 @@ public class Client {
                         System.out.print("Layer count: ");
                         int layers = Integer.parseInt(in.nextLine());
                         orderMgmt.addPaintJobOption(requestId, colour, layers);
+                        break;
                     }
                     case "2" : {
                         System.out.print("Granularity: ");
                         String g = in.nextLine();
                         orderMgmt.addSmoothingOption(requestId, g);
+                        break;
                     }
                     case "3" : {
                         System.out.print("Text  : ");
@@ -221,6 +234,7 @@ public class Client {
                         System.out.print("Image path (enter to skip): ");
                         String img = in.nextLine();
                         orderMgmt.addEngravingOption(requestId, text, font, img);
+                        break;
                     }
                     default : moreOpt = false;
                 }
@@ -234,12 +248,17 @@ public class Client {
 
     /* ------------------------- Paiement ------------------------------ */
     private static void pay(UUID customerId) throws Exception {
-        System.out.print("Order id to pay: ");
-        UUID orderId = UUID.fromString(in.nextLine());
-        System.out.print("Transaction reference: ");
-        String ref = in.nextLine();
-        orderMgmt.pay(orderId, ref);
-        System.out.println("[✓] Payment booked.");
+    	try {
+            System.out.print("Order id to pay: ");
+            UUID orderId = UUID.fromString(in.nextLine());
+            System.out.print("Transaction reference: ");
+            String ref = in.nextLine();
+            orderMgmt.pay(orderId, ref);
+            System.out.println("[✓] Payment booked.");
+    	}catch(Exception e) {
+    		System.out.println("Payement impossible");
+    	}
+
     }
     /* ===================================================================== */
     /*  MANAGER WORKFLOWS                                                    */

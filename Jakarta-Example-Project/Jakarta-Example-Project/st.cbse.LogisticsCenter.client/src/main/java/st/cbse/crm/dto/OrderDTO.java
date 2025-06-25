@@ -25,29 +25,35 @@ public class OrderDTO implements Serializable {
     private final LocalDateTime         creationDate;
     private final List<PrintRequestDTO> printingRequests;
 
-    /* Factory converts an Order entity into a DTO in one pass */
     public static OrderDTO of(Order o) {
-        List<PrintRequestDTO> prDTOs = o.getPrintingRequests()
-                                        .stream()
-                                        .map(pr -> new PrintRequestDTO(
-                                                pr.getId(),
-                                                pr.getStlPath(),
-                                                pr.getNote(),
-                                                ((List<PrintRequestDTO>) pr.getOptions())
-                                                  .stream()
-                                                  .map(op -> new OptionDTO(
-                                                          op.getClass().getSimpleName(),
-                                                          op.getPrice()))
-                                                  .toList()))
-                                        .toList();
 
-        return new OrderDTO(o.getId(),
-                            o.getCustomer().getName(),
-                            o.getOrderStatus(),
-                            o.getTotal(),
-                            o.getCreationDate(),
-                            prDTOs);
-    }
+    	List<PrintRequestDTO> prDTOs = o.getPrintingRequests()
+    	    .stream()
+    	    .map(pr -> {
+    	        // map the *options* of this printing-request
+    	        List<OptionDTO> optDTOs = ((List<PrintRequestDTO>) pr.getOptions())
+    	            .stream()
+    	            .map(op -> new OptionDTO(
+    	                    op.getClass().getSimpleName(),
+    	                    op.getPrice()))
+    	            .toList();            // or .collect(Collectors.toList()) on Java 11-
+
+    	        return new PrintRequestDTO(
+    	                pr.getId(),
+    	                pr.getStlPath(),
+    	                pr.getNote(),
+    	                optDTOs);          // now we pass the correct list
+    	    })
+    	    .toList();                     // idem – Collectors.toList() on older JDKs
+
+    	return new OrderDTO(
+    	        o.getId(),
+    	        o.getCustomer().getName(),
+    	        o.getOrderStatus(),
+    	        o.getTotal(),
+    	        o.getCreationDate(),
+    	        prDTOs);
+    	}
 
     /* private ctor enforces usage of the factory */
     private OrderDTO(UUID id,

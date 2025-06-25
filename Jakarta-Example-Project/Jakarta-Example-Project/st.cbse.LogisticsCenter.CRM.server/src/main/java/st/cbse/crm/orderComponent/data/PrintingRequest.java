@@ -69,7 +69,7 @@ public class PrintingRequest {
     /**
      * Retourne le total des prix de toutes les options de cette demande.
      */
-    public BigDecimal getOptions() {
+    /*public BigDecimal getOptions() {
         BigDecimal total = BigDecimal.ZERO;
         for (Option o : options) {
             if (o.getPrice() != null) {
@@ -77,6 +77,9 @@ public class PrintingRequest {
             }
         }
         return total;
+    }*/
+    public List<Option> getOptions() {
+        return options;
     }
 
     /* ================= helpers ======================== */

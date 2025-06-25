@@ -3,6 +3,8 @@ package st.cbse.crm.dto;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+import st.cbse.crm.orderComponent.data.Option;
+
 /**
  * Smallest item in the DTO graph: represents one extra option
  * (paint job, smoothing, engraving, …) that was chosen for a
@@ -23,4 +25,8 @@ public class OptionDTO implements Serializable {
     /* getters only (immutability) */
     public String getType()      { return type; }
     public BigDecimal getPrice() { return price; }
+    
+    public static OptionDTO of(Option o) {
+        return new OptionDTO(o.getClass().getSimpleName(), o.getPrice());
+    }
 }

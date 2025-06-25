@@ -122,22 +122,24 @@ public class OrderBean implements IOrderMgmt {
     /* 5.  Order history (DTOs, not entities)                        */
     /* ============================================================= */
     @Override
-    public List<OrderDTO> getOrdersByCustomer(UUID customerId) {
+    public List getOrdersByCustomer(UUID customerId) {
 
-        // Single SQL round-trip: join-fetch everything we need
-        List<Order> orders = em.createQuery(
-              "SELECT DISTINCT o FROM Order o " +
-              "LEFT JOIN FETCH o.printingRequests pr " +
-              "LEFT JOIN FETCH pr.options " +
-              "WHERE o.customer.id = :cid " +
-              "ORDER BY o.creationDate DESC", Order.class)
-            .setParameter("cid", customerId)
-            .getResultList();
+	EntityGraph g = em.createEntityGraph(Order.class);
+	Subgraph pr = g.addSubgraph("printingRequests");
+	pr.addSubgraph("options");
 
-        // Map the entity graph -> immutable DTO tree
-        return orders.stream()
-                     .map(OrderDTO::of)
-                     .toList();
+	List orders = em.createQuery(
+			"SELECT DISTINCT o " +
+					"FROM Order o " +
+					"WHERE o.customer.id = :cid " +
+					"ORDER BY o.creationDate DESC", Order.class)
+			.setParameter("cid", customerId)
+			.setHint("jakarta.persistence.fetchgraph", g) // <<< attach graph
+			.getResultList();
+
+    	return orders.stream()
+    			.map(OrderDTO::of)
+    			.toList();
     }
 
     /* ================================================================= */

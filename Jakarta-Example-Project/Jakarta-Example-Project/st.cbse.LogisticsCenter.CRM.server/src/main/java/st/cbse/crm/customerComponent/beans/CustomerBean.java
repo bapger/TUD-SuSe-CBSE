@@ -20,10 +20,15 @@ public class CustomerBean implements ICustomerMgmt {
     }
 
     public UUID loginCustomer(String email, String password) {
-        TypedQuery<Customer> query = em.createQuery(
-            "SELECT c FROM Customer c WHERE c.email = :email AND c.password = :pass", Customer.class);
-        query.setParameter("email", email).setParameter("pass", password);
-        return query.getSingleResult().getId();
+    	try {
+            TypedQuery<Customer> query = em.createQuery(
+                    "SELECT c FROM Customer c WHERE c.email = :email AND c.password = :pass", Customer.class);
+            query.setParameter("email", email).setParameter("pass", password);
+            return query.getSingleResult().getId();
+    	} catch (NoResultException ex) {
+            // bad credentials → sentinel or exception
+    		throw new NoResultException();    // or throw AuthenticationException
+        }
     }
 
 }
