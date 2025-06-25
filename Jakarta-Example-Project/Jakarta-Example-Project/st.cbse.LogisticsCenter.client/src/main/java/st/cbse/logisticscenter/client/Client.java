@@ -23,7 +23,7 @@ public class Client {
 
     /* --- Session state --------------------------------------------------- */
     private static UUID loggedCustomer;
-    private static UUID loggedManager;
+    private static String loggedManager;
 
     private static final Scanner in = new Scanner(System.in);
 
@@ -287,6 +287,13 @@ public class Client {
         UUID reqId = UUID.fromString(in.nextLine());
         managerMgmt.markRequestFinished(reqId);
         System.out.println("Request marked finished.");
+    }
+    
+    private static void sendPrintToProd() throws Exception{
+    	System.out.println("Id of the order : ");
+    	UUID reqId = UUID.fromString(in.nextLine());
+    	managerMgmt.sendPrintToProd(reqId);
+    	System.out.println("finished");
     }
 
     /*private static void shipOrder() throws Exception {

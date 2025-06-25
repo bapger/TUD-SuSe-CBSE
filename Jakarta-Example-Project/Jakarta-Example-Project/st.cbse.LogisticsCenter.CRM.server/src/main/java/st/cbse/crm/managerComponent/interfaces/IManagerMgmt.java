@@ -9,6 +9,6 @@ import jakarta.ejb.Remote;
 public interface IManagerMgmt {
 	void initManager();
 
-	UUID loginManager(String email, String password);
+	String loginManager(String email, String password);
 	List<UUID> sendPrintToProd(UUID orderId);
 }

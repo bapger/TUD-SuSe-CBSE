@@ -10,12 +10,14 @@ import st.cbse.crm.dto.OrderDTO;
 public interface IManagerMgmt {
 	void initManager();
 
-	UUID loginManager(String email, String pw);
+	String loginManager(String email, String pw);
 
 	void addNoteToRequest(UUID reqId, String note);
 
 	void markRequestFinished(UUID reqId);
 
 	List<OrderDTO> listAllOrders();
+
+	void sendPrintToProd(UUID reqId);
 
 }

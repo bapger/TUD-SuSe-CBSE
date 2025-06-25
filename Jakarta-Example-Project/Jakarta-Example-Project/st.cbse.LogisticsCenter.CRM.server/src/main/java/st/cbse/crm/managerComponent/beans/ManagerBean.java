@@ -37,18 +37,15 @@ public class ManagerBean implements IManagerMgmt{
     }
 
     @Override
-    public UUID loginManager(String email, String password) {
+    public String loginManager(String email, String password) {
         try {
-            TypedQuery<UUID> query = em.createQuery(
-                "SELECT m.id " +
-                "FROM   Manager m " +
-                "WHERE  m.email    = :email " +
-                "AND    m.password = :pwd",
-                UUID.class);
-
-            query.setParameter("email", email);
-            query.setParameter("pwd",   password);    
-            return query.getSingleResult(); 
+        	return em.createQuery(
+                    "SELECT m.email FROM Manager m " +
+                    "WHERE m.email = :mail AND m.password = :pwd",
+                    String.class)
+                    .setParameter("mail", email)
+                    .setParameter("pwd",  password)
+                    .getSingleResult();       // retourne directement la PK String
         }
         catch (NoResultException ex) {
             throw new NoResultException();
