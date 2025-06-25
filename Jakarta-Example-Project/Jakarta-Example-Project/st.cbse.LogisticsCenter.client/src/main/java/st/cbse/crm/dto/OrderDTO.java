@@ -1,80 +1,66 @@
 package st.cbse.crm.dto;
 
+import st.cbse.crm.orderComponent.data.Order;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import st.cbse.crm.orderComponent.data.*;
+import java.util.stream.Collectors;
 
 /**
- * Top-level DTO sent to both customers (“history”) and managers
- * (“list all orders”).  Converts the entire Order entity graph into
- * a tree of immutable value objects.
+ * DTO racine représentant une commande.
  */
 public class OrderDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final UUID                  id;
-    private final String                customerName;   // convenient for managers
-    private final OrderStatus           status;
-    private final BigDecimal            total;
+    private final String                status;
+    private final String                customerName;
     private final LocalDateTime         creationDate;
+    private final BigDecimal            total;
     private final List<PrintRequestDTO> printingRequests;
 
-    public static OrderDTO of(Order o) {
-
-    	List<PrintRequestDTO> prDTOs = o.getPrintingRequests()
-    	    .stream()
-    	    .map(pr -> {
-    	        // map the *options* of this printing-request
-    	        List<OptionDTO> optDTOs = ((List<PrintRequestDTO>) pr.getOptions())
-    	            .stream()
-    	            .map(op -> new OptionDTO(
-    	                    op.getClass().getSimpleName(),
-    	                    op.getPrice()))
-    	            .toList();            // or .collect(Collectors.toList()) on Java 11-
-
-    	        return new PrintRequestDTO(
-    	                pr.getId(),
-    	                pr.getStlPath(),
-    	                pr.getNote(),
-    	                optDTOs);          // now we pass the correct list
-    	    })
-    	    .toList();                     // idem – Collectors.toList() on older JDKs
-
-    	return new OrderDTO(
-    	        o.getId(),
-    	        o.getCustomer().getName(),
-    	        o.getOrderStatus(),
-    	        o.getTotal(),
-    	        o.getCreationDate(),
-    	        prDTOs);
-    	}
-
-    /* private ctor enforces usage of the factory */
+    /* constructeur privé : on veut passer par la factory of() */
     private OrderDTO(UUID id,
+                     String status,
                      String customerName,
-                     OrderStatus status,
-                     BigDecimal total,
                      LocalDateTime creationDate,
-                     List<PrintRequestDTO> printingRequests) {
+                     BigDecimal total,
+                     List<PrintRequestDTO> requests) {
+
         this.id               = id;
-        this.customerName     = customerName;
         this.status           = status;
-        this.total            = total;
+        this.customerName     = customerName;
         this.creationDate     = creationDate;
-        this.printingRequests = List.copyOf(printingRequests);
+        this.total            = total;
+        this.printingRequests = List.copyOf(requests);
     }
 
-    /* getters */
-    public UUID getId()                        { return id; }
-    public String getCustomerName()            { return customerName; }
-    public OrderStatus getStatus()             { return status; }
-    public BigDecimal getTotal()               { return total; }
-    public LocalDateTime getCreationDate()     { return creationDate; }
-    public List<PrintRequestDTO> getPrintingRequests() { return printingRequests; }
+    /* -------- factory -------- */
+    public static OrderDTO of(Order o) {
+        List<PrintRequestDTO> reqDtos = o.getPrintingRequests()
+                                         .stream()
+                                         .map(PrintRequestDTO::of)
+                                         .collect(Collectors.toList());
+
+        return new OrderDTO(o.getId(),
+                            o.getOrderStatus().name(),
+                            o.getCustomer().getName(),
+                            o.getCreationDate(),
+                            o.getTotal(),
+                            reqDtos);
+    }
+
+    /* ---------------- getters ---------------- */
+    public UUID getId()                       { return id; }
+    public String getStatus()                 { return status; }
+    public String getCustomer(){return customerName;}
+    public BigDecimal getTotal() {return total;}
+
+	public List<PrintRequestDTO> getPrintingRequests() {
+		return printingRequests;
+	}
 }

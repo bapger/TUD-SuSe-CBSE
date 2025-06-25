@@ -3,8 +3,11 @@ package st.cbse.crm.orderComponent.data;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import st.cbse.crm.dto.OptionDTO;
 
 public class PrintingRequest {
 
@@ -63,7 +66,7 @@ public class PrintingRequest {
     /**
      * Retourne le total des prix de toutes les options de cette demande.
      */
-    public BigDecimal getOptions() {
+    public BigDecimal getOptionsPrice() {
         BigDecimal total = BigDecimal.ZERO;
         for (Option o : options) {
             if (o.getPrice() != null) {
@@ -87,4 +90,8 @@ public class PrintingRequest {
     public void add(Option option) {
         addOption(option);
     }
+
+	public List<Option> getOptions() {
+		return options;
+	}
 }

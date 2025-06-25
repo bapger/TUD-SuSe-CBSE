@@ -35,7 +35,7 @@ public class Client {
             customerMgmt = (ICustomerMgmt) ctx.lookup(
                 "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.customerComponent.interfaces.ICustomerMgmt");
             managerMgmt  = (IManagerMgmt)  ctx.lookup(
-                "ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.managerComponent.interfaces.IManagerMgmt");
+                "ejb:/st.cbse.LogisticsCenter.CRM.server/ManagerBean!st.cbse.crm.managerComponent.interfaces.IManagerMgmt");
             orderMgmt    = (IOrderMgmt)    ctx.lookup(
                 "ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.orderComponent.interfaces.IOrderMgmt");
             shipmentMgmt = (IShipmentMgmt) ctx.lookup(
@@ -156,6 +156,7 @@ public class Client {
             loggedManager = managerMgmt.loginManager(email, pw);
             System.out.println("Logged in as manager.");
         }catch(Exception ex) {
+        	ex.printStackTrace();
         	System.out.println("bad credentials");
         	loggedManager =null;
         }
@@ -269,7 +270,7 @@ public class Client {
         if (orders.isEmpty()) { System.out.println("No orders."); return; }
         orders.forEach(o -> System.out.printf(
             "%s  %-11s  Customer=%s  Total=€%s%n",
-            o.getId(), o.getStatus(), o.getCustomerName(), o.getTotal()));
+            o.getId(), o.getStatus(), o.getCustomer(), o.getTotal()));
     }
 
     private static void addNote() throws Exception {
