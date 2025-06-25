@@ -1,7 +1,6 @@
 package st.cbse.crm.orderComponent.data;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +23,10 @@ public class PrintingRequest {
     @ManyToOne
     private Order order;
 
-    @OneToMany(mappedBy = "printingRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Option> options = new ArrayList<>();
+    @OneToMany(mappedBy = "printingRequest", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+ @OrderColumn(name = "opt_idx")          // extra INT column
+ private List<Option> options = new ArrayList<>();
 
     /* -------------------------------------------------- */
     public PrintingRequest() { }
