@@ -6,4 +6,5 @@ import java.util.UUID;
 @Remote
 public interface ICustomerMgmt {
     UUID registerCustomer(String name, String email, String password);
+    UUID loginCustomer(String email, String password);
 }
