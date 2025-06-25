@@ -4,13 +4,19 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.ejb.Local;
 import st.cbse.productionFacility.production.machine.data.Machine;
+import st.cbse.productionFacility.production.machine.dto.MachineDTO;
 
 @Local
 public interface IMachineMgmt {
     
     List<Machine> listAllMachines();
     Machine getMachine(UUID machineId);
+    
+    // Méthode existante
     List<Machine> findAvailableMachinesByType(String machineType);
+    
+    // Nouvelle méthode pour les DTOs
+    List<MachineDTO> findAvailableMachineDTOsByType(String machineType);
     
     boolean reserveMachine(UUID machineId, UUID processId);
     boolean programMachine(UUID machineId);

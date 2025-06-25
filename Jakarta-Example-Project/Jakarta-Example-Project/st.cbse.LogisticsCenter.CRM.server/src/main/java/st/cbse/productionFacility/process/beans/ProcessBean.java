@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -16,6 +17,8 @@ import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.process.dto.ProcessMapper;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
+import st.cbse.productionFacility.production.machine.dto.MachineDTO;
+import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
 
 @Stateless
 public class ProcessBean implements IProcessMgmt {
@@ -24,6 +27,9 @@ public class ProcessBean implements IProcessMgmt {
     
     @PersistenceContext
     private EntityManager em;
+    
+    @EJB
+    private IMachineMgmt machineMgmt;
     
     @Override
     public UUID createProcessFromPrintRequest(PrintRequestDTO printRequest) {
@@ -65,9 +71,144 @@ public class ProcessBean implements IProcessMgmt {
         LOG.info("Total steps in process: " + process.getSteps().size());
         LOG.info("Process status: " + process.getStatus());
         LOG.info("Created process " + process.getId() + " with " + process.getSteps().size() + " steps");
+        
+        // Essayer de démarrer le process automatiquement
+        LOG.info("Attempting to start process automatically...");
+        tryToStartProcess(process);
+        
         LOG.info("========================================");
         
         return process.getId();
+    }
+    
+    private void tryToStartProcess(Process process) {
+        LOG.info("Checking if process can be started: " + process.getId());
+        
+        // Récupérer la première étape
+        ProcessStep firstStep = process.getCurrentStep();
+        if (firstStep == null) {
+            LOG.warning("No first step found for process " + process.getId());
+            return;
+        }
+        
+        LOG.info("First step type: " + firstStep.getStepType());
+        
+        // Mapper le type d'étape au type de machine
+        String machineType = mapStepToMachineType(firstStep.getStepType());
+        LOG.info("Looking for available machines of type: " + machineType);
+        
+        // Si IMachineMgmt a une méthode qui retourne directement des DTOs
+        List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
+        LOG.info("Found " + availableMachines.size() + " available machines");
+        
+        if (!availableMachines.isEmpty()) {
+            MachineDTO machineDTO = availableMachines.get(0);
+            LOG.info("Found available machine: " + machineDTO.getId() + " (Type: " + machineDTO.getType() + ")");
+            
+            // Réserver la machine pour ce process
+            boolean reserved = machineMgmt.reserveMachine(machineDTO.getId(), process.getId());
+            if (reserved) {
+                LOG.info("Machine " + machineDTO.getId() + " reserved successfully");
+                
+                // Assigner la machine à l'étape
+                firstStep.setAssignedMachineId(machineDTO.getId());
+                
+                // Mettre à jour le statut du process
+                process.setStatus(ProcessStatus.IN_PROGRESS);
+                em.merge(process);
+                
+                LOG.info("Process " + process.getId() + " started with machine " + machineDTO.getId());
+                
+                // Programmer et exécuter la machine
+                if (machineMgmt.programMachine(machineDTO.getId())) {
+                    LOG.info("Machine " + machineDTO.getId() + " programmed successfully");
+                    
+                    // NOUVEAU : Exécuter la machine immédiatement
+                    LOG.info("Executing machine " + machineDTO.getId() + " for process " + process.getId());
+                    boolean executed = machineMgmt.executeMachine(machineDTO.getId());
+                    
+                    if (executed) {
+                        LOG.info("Machine " + machineDTO.getId() + " executed successfully!");
+                        
+                        // Vérifier si on peut passer à l'étape suivante
+                        ProcessStep nextStep = process.getCurrentStep();
+                        if (nextStep != null && !nextStep.equals(firstStep)) {
+                            LOG.info("Moving to next step: " + nextStep.getStepType());
+                            tryToProcessNextStep(process, nextStep);
+                        } else if (process.getStatus() == ProcessStatus.COMPLETED) {
+                            LOG.info("Process " + process.getId() + " completed successfully!");
+                        }
+                    } else {
+                        LOG.warning("Failed to execute machine " + machineDTO.getId());
+                    }
+                }
+            } else {
+                LOG.warning("Failed to reserve machine " + machineDTO.getId());
+                queueProcess(process);
+            }
+        } else {
+            LOG.info("No available machines found - queueing process");
+            queueProcess(process);
+        }
+    }
+
+    // Nouvelle méthode pour traiter l'étape suivante
+    private void tryToProcessNextStep(Process process, ProcessStep nextStep) {
+        LOG.info("Attempting to process next step: " + nextStep.getStepType() + " for process " + process.getId());
+        
+        String machineType = mapStepToMachineType(nextStep.getStepType());
+        List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
+        
+        if (!availableMachines.isEmpty()) {
+            MachineDTO machineDTO = availableMachines.get(0);
+            
+            if (machineMgmt.reserveMachine(machineDTO.getId(), process.getId())) {
+                nextStep.setAssignedMachineId(machineDTO.getId());
+                em.merge(process);
+                
+                if (machineMgmt.programMachine(machineDTO.getId())) {
+                    boolean executed = machineMgmt.executeMachine(machineDTO.getId());
+                    
+                    if (executed) {
+                        LOG.info("Step " + nextStep.getStepType() + " executed successfully");
+                        
+                        // Récursivement traiter l'étape suivante
+                        ProcessStep followingStep = process.getCurrentStep();
+                        if (followingStep != null && !followingStep.equals(nextStep)) {
+                            tryToProcessNextStep(process, followingStep);
+                        }
+                    }
+                }
+            }
+        } else {
+            LOG.info("No available machine for step " + nextStep.getStepType() + " - process will wait");
+        }
+    }
+    
+    private void queueProcess(Process process) {
+        process.setStatus(ProcessStatus.QUEUED);
+        em.merge(process);
+        LOG.info("Process " + process.getId() + " added to queue");
+    }
+    
+    private String mapStepToMachineType(String stepType) {
+        // Mapper les types d'étapes aux types de machines
+        // À adapter selon votre modèle de données
+        switch (stepType.toUpperCase()) {
+            case "PRINTING":
+                return "PrintingMachine";
+            case "PAINT":
+                return "PaintingMachine";
+            case "SMOOTHING":
+                return "SmoothingMachine";
+            case "ENGRAVING":
+                return "EngravingMachine";
+            case "PACKAGING":
+                return "PackagingMachine";
+            default:
+                LOG.warning("Unknown step type for machine mapping: " + stepType);
+                return stepType + "Machine";
+        }
     }
     
     private String mapOptionToStepType(OptionDTO option) {
