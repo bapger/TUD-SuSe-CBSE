@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import st.cbse.crm.orderComponent.data.PrintingRequest;
 
 public class PrintRequestDTO implements Serializable {
 
@@ -39,4 +42,16 @@ public class PrintRequestDTO implements Serializable {
 
     /* new getter */
     public BigDecimal getPrice()        { return price; }
+    
+    public static PrintRequestDTO of(PrintingRequest pr) {
+        List<OptionDTO> optionDtos = pr.getOptions()
+                                       .stream()
+                                       .map(OptionDTO::of)   // => assurez-vous que OptionDTO.of(Option) existe
+                                       .collect(Collectors.toList());
+
+        return new PrintRequestDTO(pr.getId(),
+                                   pr.getStlPath(),
+                                   pr.getNote(),
+                                   optionDtos);
+    }
 }

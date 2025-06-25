@@ -58,4 +58,5 @@ public class OrderDTO implements Serializable {
     public UUID getId()                       { return id; }
     public String getStatus()                 { return status; }
     public String getCustomer(){return customerName;}
+    public BigDecimal getTotal() {return total;}
 }
