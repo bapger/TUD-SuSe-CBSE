@@ -6,14 +6,31 @@ import jakarta.persistence.Entity;
 @Entity
 @DiscriminatorValue("ENGRAVING")
 public class EngravingMachine extends Machine {
-
-    @Override
-    protected long shutdownDelayMillis() {
-        return 1_000;
+    
+    private static final long PROCESSING_TIME = 4000;
+    private static final String ACTION_MESSAGE = "Engraving";
+    private static final String MACHINE_TYPE = "ENGRAVING";
+    
+    protected EngravingMachine() {
+        super(true, true);
     }
-
+    
+    public EngravingMachine(boolean hasInput, boolean hasOutput) {
+        super(hasInput, hasOutput);
+    }
+    
     @Override
-    protected String buildMessage(String action) {
-        return "Engraver " + getName() + " (" + getId() + ") " + action;
+    public long getProcessingTimeMillis() {
+        return PROCESSING_TIME;
+    }
+    
+    @Override
+    public String getActionMessage() {
+        return ACTION_MESSAGE;
+    }
+    
+    @Override
+    public String getMachineType() {
+        return MACHINE_TYPE;
     }
 }

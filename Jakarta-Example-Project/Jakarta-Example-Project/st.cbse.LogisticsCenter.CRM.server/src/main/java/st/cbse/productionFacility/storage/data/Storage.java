@@ -2,35 +2,56 @@ package st.cbse.productionFacility.storage.data;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "storage")
 public class Storage {
-
+    
     @Id
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UUID.randomUUID();
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "storage_id")
-    private List<ItemData> finishedProducts = new ArrayList<>();
-
-    public UUID getId() {
-        return id;
+    
+    private String name;
+    
+    private int capacity;
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<ItemData> items = new ArrayList<>();
+    
+    protected Storage() {}
+    
+    public Storage(String name, int capacity) {
+        this.name = name;
+        this.capacity = capacity;
     }
-
-    public List<ItemData> getFinishedProducts() {
-        return Collections.unmodifiableList(finishedProducts);
+    
+    public UUID getId() { return id; }
+    public String getName() { return name; }
+    public int getCapacity() { return capacity; }
+    public List<ItemData> getItems() { return new ArrayList<>(items); }
+    
+    public int getCurrentOccupancy() {
+        return items.size();
     }
-
-    public void addItem(ItemData item) {
-        finishedProducts.add(item);
+    
+    public boolean hasSpace() {
+        return getCurrentOccupancy() < capacity;
     }
-
-    public void removeItem(ItemData item) {
-        finishedProducts.remove(item);
+    
+    public boolean addItem(ItemData item) {
+        if (!hasSpace()) return false;
+        items.add(item);
+        return true;
+    }
+    
+    public boolean removeItem(ItemData item) {
+        return items.remove(item);
+    }
+    
+    public ItemData findItemById(UUID itemId) {
+        return items.stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst()
+                .orElse(null);
     }
 }

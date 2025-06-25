@@ -4,16 +4,33 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
-@DiscriminatorValue("SMOOTHING")
+@DiscriminatorValue("SMOOTHINGS")
 public class SmoothingMachine extends Machine {
-
-    @Override
-    protected long shutdownDelayMillis() {
-        return 2_500;
+    
+    private static final long PROCESSING_TIME = 2000;
+    private static final String ACTION_MESSAGE = "Smoothing";
+    private static final String MACHINE_TYPE = "SMOOTHING";
+    
+    protected SmoothingMachine() {
+        super(true, true);
     }
-
+    
+    public SmoothingMachine(boolean hasInput, boolean hasOutput) {
+        super(hasInput, hasOutput);
+    }
+    
     @Override
-    protected String buildMessage(String action) {
-        return "Smoother " + getName() + " (" + getId() + ") " + action;
+    public long getProcessingTimeMillis() {
+        return PROCESSING_TIME;
+    }
+    
+    @Override
+    public String getActionMessage() {
+        return ACTION_MESSAGE;
+    }
+    
+    @Override
+    public String getMachineType() {
+        return MACHINE_TYPE;
     }
 }

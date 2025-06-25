@@ -1,5 +1,10 @@
 package st.cbse.productionFacility.process.data.enums;
 
 public enum ProcessStatus {
-    ACTIVE, STOPPED
+    CREATED,
+    QUEUED,
+    IN_PROGRESS,
+    COMPLETED,
+    FAILED,
+    CANCELLED
 }

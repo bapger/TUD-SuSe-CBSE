@@ -1,17 +1,28 @@
 package st.cbse.productionFacility.process.interfaces;
 
-import jakarta.ejb.Local;
 import java.util.List;
 import java.util.UUID;
-
+import jakarta.ejb.Local;
 import st.cbse.crm.dto.PrintRequestDTO;
-import st.cbse.productionFacility.process.data.enums.ProcessStatus;
-import st.cbse.productionFacility.process.dto.ProcessData;
+import st.cbse.productionFacility.process.dto.ProcessDTO;
 
 @Local
 public interface IProcessMgmt {
-    boolean setStatus(UUID processId, ProcessStatus status);
-    List<ProcessData> viewProcesses();
-    boolean addProcess(PrintRequestDTO	 req);
-    boolean processStep(UUID stepId);
+    
+    UUID createProcessFromPrintRequest(PrintRequestDTO printRequest);
+    
+    ProcessDTO getProcess(UUID processId);
+    List<ProcessDTO> getAllProcesses();
+    List<ProcessDTO> getProcessesByStatus(String status);
+    
+    boolean startProcess(UUID processId);
+    boolean cancelProcess(UUID processId);
+    
+    boolean validateCurrentStep(UUID processId, UUID machineId);
+    
+    void notifyStepCompleted(UUID processId, UUID machineId);
+    void notifyMachineStopped(UUID processId);
+    
+    ProcessDTO getCurrentStepInfo(UUID processId);
+    boolean isProcessComplete(UUID processId);
 }

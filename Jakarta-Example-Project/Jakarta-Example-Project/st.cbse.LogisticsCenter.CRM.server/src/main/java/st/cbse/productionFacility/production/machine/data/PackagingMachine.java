@@ -6,14 +6,31 @@ import jakarta.persistence.Entity;
 @Entity
 @DiscriminatorValue("PACKAGING")
 public class PackagingMachine extends Machine {
-
-    @Override
-    protected long shutdownDelayMillis() {
-        return 2_000;
+    
+    private static final long PROCESSING_TIME = 1000;
+    private static final String ACTION_MESSAGE = "Packaging";
+    private static final String MACHINE_TYPE = "PACKAGING";
+    
+    protected PackagingMachine() {
+        super(true, true);
     }
-
+    
+    public PackagingMachine(boolean hasInput, boolean hasOutput) {
+        super(hasInput, hasOutput);
+    }
+    
     @Override
-    protected String buildMessage(String action) {
-        return "Packager" + getName() + " (" + getId() + ") " + action;
+    public long getProcessingTimeMillis() {
+        return PROCESSING_TIME;
+    }
+    
+    @Override
+    public String getActionMessage() {
+        return ACTION_MESSAGE;
+    }
+    
+    @Override
+    public String getMachineType() {
+        return MACHINE_TYPE;
     }
 }

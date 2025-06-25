@@ -5,51 +5,48 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "items")
+@Table(name = "ITEM_DATA")
 public class ItemData {
-
+    
     @Id
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UUID.randomUUID();
-
-    @Column(name = "process_id", nullable = false)
+    
     private UUID processId;
-
-    @Column(name = "order_id", nullable = false)
-    private UUID orderId;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "created_at", nullable = false)
+    
+    private UUID printRequestId;
+    
+    private String stlPath;
+    
     private LocalDateTime createdAt = LocalDateTime.now();
-
-    public ItemData() {
-    }
-
-    public ItemData(UUID processId, UUID orderId, String name) {
+    
+    private String currentLocation;
+    
+    @Enumerated(EnumType.STRING)
+    private ItemStatus status = ItemStatus.IN_PRODUCTION;
+    
+    protected ItemData() {}
+    
+    public ItemData(UUID processId, UUID printRequestId, String stlPath) {
         this.processId = processId;
-        this.orderId = orderId;
-        this.name = name;
+        this.printRequestId = printRequestId;
+        this.stlPath = stlPath;
     }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getProcessId() {
-        return processId;
-    }
-
-    public UUID getOrderId() {
-        return orderId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    
+    public UUID getId() { return id; }
+    public UUID getProcessId() { return processId; }
+    public UUID getPrintRequestId() { return printRequestId; }
+    public String getStlPath() { return stlPath; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getCurrentLocation() { return currentLocation; }
+    public ItemStatus getStatus() { return status; }
+    
+    public void setCurrentLocation(String location) { this.currentLocation = location; }
+    public void setStatus(ItemStatus status) { this.status = status; }
+    
+    public enum ItemStatus {
+        IN_PRODUCTION,
+        IN_TRANSIT,
+        IN_STORAGE,
+        SHIPPED
     }
 }

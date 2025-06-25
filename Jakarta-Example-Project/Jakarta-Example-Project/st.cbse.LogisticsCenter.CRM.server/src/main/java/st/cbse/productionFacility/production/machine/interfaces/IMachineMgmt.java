@@ -2,19 +2,23 @@ package st.cbse.productionFacility.production.machine.interfaces;
 
 import java.util.List;
 import java.util.UUID;
-
-import jakarta.ejb.Remote;
+import jakarta.ejb.Local;
 import st.cbse.productionFacility.production.machine.data.Machine;
-import st.cbse.productionFacility.production.machine.data.MachineStatus;
 
-@Remote
+@Local
 public interface IMachineMgmt {
-
-    List<Machine> viewMachines();
-    UUID reserveMachine(Class<? extends Machine> type, UUID processId);
+    
+    List<Machine> listAllMachines();
+    Machine getMachine(UUID machineId);
+    List<Machine> findAvailableMachinesByType(String machineType);
+    
+    boolean reserveMachine(UUID machineId, UUID processId);
     boolean programMachine(UUID machineId);
     boolean executeMachine(UUID machineId);
     boolean stopMachine(UUID machineId);
-    boolean transportItem(UUID itemId);
-    MachineStatus viewStatus(UUID machineId);
+    
+    UUID retrieveFromOutput(UUID machineId);
+    boolean canAcceptInput(UUID machineId);
+    
+    void notifyItemArrived(UUID machineId, UUID itemId);
 }

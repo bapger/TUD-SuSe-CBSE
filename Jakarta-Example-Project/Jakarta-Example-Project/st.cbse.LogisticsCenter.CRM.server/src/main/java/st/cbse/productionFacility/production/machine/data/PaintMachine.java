@@ -6,14 +6,31 @@ import jakarta.persistence.Entity;
 @Entity
 @DiscriminatorValue("PAINT")
 public class PaintMachine extends Machine {
-
-    @Override
-    protected long shutdownDelayMillis() {
-        return 1_500;
+    
+    private static final long PROCESSING_TIME = 2000;
+    private static final String ACTION_MESSAGE = "Painting";
+    private static final String MACHINE_TYPE = "PAINT";
+    
+    protected PaintMachine() {
+        super(true, true);
     }
-
+    
+    public PaintMachine(boolean hasInput, boolean hasOutput) {
+        super(hasInput, hasOutput);
+    }
+    
     @Override
-    protected String buildMessage(String action) {
-        return "Painter " + getName() + " (" + getId() + ") " + action;
+    public long getProcessingTimeMillis() {
+        return PROCESSING_TIME;
+    }
+    
+    @Override
+    public String getActionMessage() {
+        return ACTION_MESSAGE;
+    }
+    
+    @Override
+    public String getMachineType() {
+        return MACHINE_TYPE;
     }
 }

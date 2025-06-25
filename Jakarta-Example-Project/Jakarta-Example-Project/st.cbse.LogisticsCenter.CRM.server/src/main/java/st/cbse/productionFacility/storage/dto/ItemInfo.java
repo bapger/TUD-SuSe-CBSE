@@ -1,65 +1,37 @@
 package st.cbse.productionFacility.storage.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import st.cbse.productionFacility.storage.data.ItemData;
-
-public class ItemInfo {
-
+public class ItemInfo implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     private UUID id;
-    private UUID orderId;
-    private String name;
+    private UUID processId;
+    private UUID printRequestId;
+    private String currentLocation;
+    private String status;
     private LocalDateTime createdAt;
-
-    public ItemInfo() {
-    }
-
-    public ItemInfo(UUID id, UUID orderId, String name, LocalDateTime createdAt) {
-        this.id = id;
-        this.orderId = orderId;
-        this.name = name;
-        this.createdAt = createdAt;
-    }
-
-    public static ItemInfo fromEntity(ItemData data) {
-        return new ItemInfo(
-                data.getId(),
-                data.getOrderId(),
-                data.getName(),
-                data.getCreatedAt()
-        );
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(UUID orderId) {
-        this.orderId = orderId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    
+    public ItemInfo() {}
+    
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    
+    public UUID getProcessId() { return processId; }
+    public void setProcessId(UUID processId) { this.processId = processId; }
+    
+    public UUID getPrintRequestId() { return printRequestId; }
+    public void setPrintRequestId(UUID printRequestId) { this.printRequestId = printRequestId; }
+    
+    public String getCurrentLocation() { return currentLocation; }
+    public void setCurrentLocation(String currentLocation) { this.currentLocation = currentLocation; }
+    
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
