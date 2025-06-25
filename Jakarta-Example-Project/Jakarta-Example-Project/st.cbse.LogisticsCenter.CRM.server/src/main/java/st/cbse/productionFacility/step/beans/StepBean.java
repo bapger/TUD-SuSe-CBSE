@@ -18,7 +18,7 @@ import st.cbse.productionFacility.step.interfaces.IStepMgmt;
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class StepBean implements IStepMgmt {
 
-    @PersistenceContext(unitName = "prodPU")
+    @PersistenceContext
     private EntityManager em;
 
     @EJB

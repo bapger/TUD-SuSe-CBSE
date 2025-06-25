@@ -3,10 +3,12 @@ package st.cbse.productionFacility.production.interfaces;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.ejb.Remote;
 import st.cbse.productionFacility.production.machine.data.MachineStatus;
 import st.cbse.productionFacility.step.data.StepType;
 import st.cbse.productionFacility.production.machine.data.Machine;
 
+@Remote
 public interface IProductionMgmt {
     List<Machine> viewMachines();
     UUID reserveMachine(StepType stepType, UUID processId);

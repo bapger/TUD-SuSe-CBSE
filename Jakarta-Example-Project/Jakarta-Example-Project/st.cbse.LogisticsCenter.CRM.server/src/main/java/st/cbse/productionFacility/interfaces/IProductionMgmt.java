@@ -4,10 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.ejb.Local;
+import jakarta.ejb.Remote;
 import st.cbse.productionFacility.production.machine.data.Machine;
 import st.cbse.productionFacility.step.data.Step;
 
-@Local
+@Remote
 public interface IProductionMgmt {
 List<Machine> viewMachines();
 UUID reserveMachine(Step type, UUID processId);
