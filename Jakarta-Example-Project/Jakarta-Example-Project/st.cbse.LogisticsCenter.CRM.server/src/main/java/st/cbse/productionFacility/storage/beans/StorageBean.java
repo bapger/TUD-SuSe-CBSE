@@ -3,7 +3,6 @@ package st.cbse.productionFacility.storage.beans;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -51,7 +50,7 @@ public class StorageBean implements IStorageMgmt {
 
     @Override
     public UUID finishItem(UnfinishedProduct unfinished, UUID orderId, String name) {
-        ItemData finished = new ItemData(orderId, unfinished.getProcessId(), name, LocalDateTime.now());
+        ItemData finished = new ItemData(orderId, unfinished.getProcessId(), name);
         addItem(finished);
         return finished.getId();
     }

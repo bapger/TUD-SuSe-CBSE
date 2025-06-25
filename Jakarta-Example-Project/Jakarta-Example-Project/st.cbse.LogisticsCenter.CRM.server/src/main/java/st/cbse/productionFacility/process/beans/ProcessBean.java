@@ -3,6 +3,7 @@ package st.cbse.productionFacility.process.beans;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
 import st.cbse.productionFacility.process.data.*;
+import st.cbse.productionFacility.process.data.Process;
 import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 
 import java.util.*;

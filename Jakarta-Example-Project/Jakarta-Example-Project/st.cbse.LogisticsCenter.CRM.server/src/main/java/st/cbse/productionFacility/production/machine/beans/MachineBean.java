@@ -6,13 +6,8 @@ import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import st.cbse.productionFacility.production.machine.data.EngravingMachine;
 import st.cbse.productionFacility.production.machine.data.Machine;
 import st.cbse.productionFacility.production.machine.data.MachineStatus;
-import st.cbse.productionFacility.production.machine.data.PaintMachine;
-import st.cbse.productionFacility.production.machine.data.PackagingMachine;
-import st.cbse.productionFacility.production.machine.data.PrintingMachine;
-import st.cbse.productionFacility.production.machine.data.SmoothingMachine;
 import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
 
 @Stateless
