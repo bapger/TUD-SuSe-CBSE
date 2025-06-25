@@ -13,7 +13,7 @@ class ProcessBean {
     @PersistenceContext
     private EntityManager em;
 
-    public UUID startProcess(List<Step> steps) {
+    public UUID startProcess(List<ProcessStep> steps) {
         Process p = new Process();
         p.setStatus(ProcessStatus.ACTIVE);
         p.setSteps(steps);

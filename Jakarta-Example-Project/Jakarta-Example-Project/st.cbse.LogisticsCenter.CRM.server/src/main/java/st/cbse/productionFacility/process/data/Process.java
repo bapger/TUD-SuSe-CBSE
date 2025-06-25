@@ -14,14 +14,14 @@ public class Process {
     private ProcessStatus status;
 
     @OneToMany(cascade = CascadeType.ALL)
-    private List<Step> steps = new ArrayList<>();
+    private List<ProcessStep> steps = new ArrayList<>();
 
 	public void setStatus(ProcessStatus active) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	public void setSteps(List<Step> steps2) {
+	public void setSteps(List<ProcessStep> steps2) {
 		// TODO Auto-generated method stub
 		
 	}

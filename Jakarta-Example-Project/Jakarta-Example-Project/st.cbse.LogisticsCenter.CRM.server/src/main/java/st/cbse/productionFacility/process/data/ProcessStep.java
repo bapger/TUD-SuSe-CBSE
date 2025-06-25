@@ -3,7 +3,7 @@ package st.cbse.productionFacility.process.data;
 import jakarta.persistence.*;
 
 @Entity
-public class Step {
+public class ProcessStep {
     @Id
     @GeneratedValue
     private Long id;
