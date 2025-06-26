@@ -64,62 +64,80 @@ public class Client {
     /* ===================================================================== */
 
     private static boolean mainMenu() throws Exception {
-        System.out.println("\nMain menu");
-        System.out.println("1  Register as customer");
-        System.out.println("2  Login as customer");
-        System.out.println("3  Login as manager");
-        System.out.println("0  Exit");
-        System.out.print("> ");
-        switch (in.nextLine()) {
-            case "1": registerCustomer();          return true;
-            case "2": loginCustomer();             return true;
-            case "3": loginManager();              return true;
-            case "0": return false;
-            default:  System.out.println("Invalid choice."); return true;
-        }
+    	try {
+            System.out.println("\nMain menu");
+            System.out.println("1  Register as customer");
+            System.out.println("2  Login as customer");
+            System.out.println("3  Login as manager");
+            System.out.println("0  Exit");
+            System.out.print("> ");
+            switch (in.nextLine()) {
+                case "1": registerCustomer();          return true;
+                case "2": loginCustomer();             return true;
+                case "3": loginManager();              return true;
+                case "0": return false;
+                default:  System.out.println("Invalid choice."); return true;
+            }
+    	}catch(Exception e) {
+    		System.out.println("error : " + e.getMessage());
+    		return true;
+    	}
+
     }
 
     private static boolean customerMenu() throws Exception {
-        System.out.println("\nCustomer menu");
-        System.out.println("1  View order history");
-        System.out.println("2  Create new order");
-        System.out.println("3  Pay order");
-        System.out.println("4  Logout");
-        System.out.println("0  Exit");
-        System.out.print("> ");
-        switch (in.nextLine()) {
-            case "1": viewOrderHistory(loggedCustomer);     return true;
-            case "2": createNewOrder(loggedCustomer);       return true;
-            case "3": pay(loggedCustomer);                  return true;
-            case "4": loggedCustomer = null;                return true;
-            case "0": return false;
-            default:  System.out.println("Invalid choice."); return true;
-        }
+    	try {
+            System.out.println("\nCustomer menu");
+            System.out.println("1  View order history");
+            System.out.println("2  Create new order");
+            System.out.println("3  Pay order");
+            System.out.println("4  Logout");
+            System.out.println("0  Exit");
+            System.out.print("> ");
+            switch (in.nextLine()) {
+                case "1": viewOrderHistory(loggedCustomer);     return true;
+                case "2": createNewOrder(loggedCustomer);       return true;
+                case "3": pay(loggedCustomer);                  return true;
+                case "4": loggedCustomer = null;                return true;
+                case "0": return false;
+                default:  System.out.println("Invalid choice."); return true;
+            }
+    	}catch(Exception e) {
+    		System.out.println("error : " + e.getMessage());
+    		return true;
+    	}
     }
 
     private static boolean managerMenu() throws Exception {
-        System.out.println("\nManager menu");
-        System.out.println("1  List all orders");
-        System.out.println("2  Add note to request");
-        System.out.println("3  Mark request finished");
-        System.out.println("4  Ship order");
-        System.out.println("5  View finished items in storage");
-        System.out.println("6  Logout");
-        System.out.println("7  send Order to the production");
-        System.out.println("0  Exit");
-        System.out.print("> ");
-        switch (in.nextLine()) {
-            case "1": listOrders();                    return true;
-            case "2": addNote();                       return true;
-            case "3": markFinished();                  return true;
-            case "4": shipOrder();                     return true;
-            case "5": viewStorage();                   return true;
-            case "6": loggedManager = null;            return true;
-            case "7": sendPrintToProd();            return true;
-            case "0": return false;
-            default:  System.out.println("Invalid choice."); return true;
-        }
-    }
+    	try {
+            System.out.println("\nManager menu");
+            System.out.println("1  List all orders");
+            System.out.println("2  Add note to request");
+            System.out.println("3  Mark request finished");
+            System.out.println("4  Ship order");
+            System.out.println("5  View finished items in storage");
+            System.out.println("6  Logout");
+            System.out.println("7  send Order to the production");
+            System.out.println("0  Exit");
+            System.out.print("> ");
+            switch (in.nextLine()) {
+                case "1": listOrders();                    return true;
+                case "2": addNote();                       return true;
+                case "3": markFinished();                  return true;
+                case "4": shipOrder();                     return true;
+                case "5": viewStorage();                   return true;
+                case "6": loggedManager = null;            return true;
+                case "7": sendPrintToProd();            return true;
+                case "0": return false;
+                default:  System.out.println("Invalid choice."); return true;
+            }
+            }catch(Exception e) {
+            	System.out.println("error " + e.getMessage());
+            	return true;
+            }
+    	}
+
+    
 
     /* ===================================================================== */
     /*  AUTH / REGISTRATION                                                  */

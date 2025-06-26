@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
+@Table(name = "CUSTOMER",
+uniqueConstraints = @UniqueConstraint(name = "UK_CUSTOMER_EMAIL",
+columnNames = "email"))
 public class Customer {
     @Id
     private UUID id = UUID.randomUUID();
     private String name;
+    @Id
     private String email;
     private String password;
 

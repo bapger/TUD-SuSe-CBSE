@@ -52,6 +52,7 @@ public class ManagerBean implements IManagerMgmt{
         }
     }
     
+    
     @Override
     public List<UUID> sendPrintToProd(UUID orderId) {
         try {
@@ -78,4 +79,28 @@ public class ManagerBean implements IManagerMgmt{
             throw new RuntimeException("Failed to send print requests to production: " + ex.getMessage(), ex);
         }
     }
+    
+    
+    @Override
+    public List<OrderDTO> listAllOrders() {
+        /* Pas de logique métier ici : simple délégation */
+        return orderService.fetchAllOrderDTOs();
+    }
+
+    @Override
+    public void addNoteToRequest(UUID requestId, String note) {
+        if (note == null || note.isBlank()) {
+            throw new IllegalArgumentException("Note must not be empty");
+        }
+        try {
+            orderService.addNoteToPrintRequest(requestId, note);
+        } catch (NoResultException ex) {
+            throw new NoResultException("PrintRequest not found: " + requestId);
+        } catch (Exception ex) {
+            throw new RuntimeException(
+                    "Unable to add note to request " + requestId + " : " + ex.getMessage(), ex);
+        }
+    }
+    
+    
 }

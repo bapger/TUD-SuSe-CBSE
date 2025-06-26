@@ -12,11 +12,16 @@ import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
 public class CustomerBean implements ICustomerMgmt {
     @PersistenceContext private EntityManager em;
 
-    public UUID registerCustomer(String name, String email, String password) {
-        Address addr = new Address("12345", "Default Street", "City");
-        Customer c = new Customer(name, email, password, addr);
-        em.persist(c);
-        return c.getId();
+    public UUID registerCustomer(String name, String email, String password) throws Exception {
+    	try {
+            Address addr = new Address("12345", "Default Street", "City");
+            Customer c = new Customer(name, email, password, addr);
+            em.persist(c);
+            return c.getId();
+    	}catch(Exception e) {
+    		throw new Exception("email already in use");
+    	}
+
     }
 
     public UUID loginCustomer(String email, String password) {

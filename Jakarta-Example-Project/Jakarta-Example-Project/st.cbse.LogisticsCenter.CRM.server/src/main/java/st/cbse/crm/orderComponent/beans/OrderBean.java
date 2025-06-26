@@ -223,5 +223,31 @@ public class OrderBean implements IOrderMgmt {
 
         return OrderDTO.of(order);        // mapping entité → DTO
     }
+    
+    @Override
+    public List<OrderDTO> fetchAllOrderDTOs() {
+    EntityGraph<Order> g = em.createEntityGraph(Order.class);
+    Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
+    pr.addSubgraph("options");
+    List<Order> orders = em.createQuery(
+            "SELECT DISTINCT o " +
+            "FROM   Order o " +
+            "ORDER  BY o.creationDate DESC",
+            Order.class)
+        .setHint("jakarta.persistence.fetchgraph", g)   // on force le graph
+        .getResultList();
+
+    return orders.stream()
+                 .map(OrderDTO::of)                     // méthode statique déjà existante
+                 .collect(java.util.stream.Collectors.toList());
+    }
+
+	@Override
+	public void addNoteToPrintRequest(UUID requestId, String note) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 
 }

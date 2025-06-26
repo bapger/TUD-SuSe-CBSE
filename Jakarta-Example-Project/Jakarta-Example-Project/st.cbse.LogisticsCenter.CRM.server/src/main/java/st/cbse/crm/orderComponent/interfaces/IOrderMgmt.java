@@ -30,4 +30,9 @@ public interface IOrderMgmt {
 	PrintRequestDTO getPrintRequestDTO(UUID printingRequestId);
 	OrderDTO getOrderDTO(UUID orderId);
 
+	void addNoteToPrintRequest(UUID requestId, String note);
+
+
+	List<OrderDTO> fetchAllOrderDTOs();
+
 }
