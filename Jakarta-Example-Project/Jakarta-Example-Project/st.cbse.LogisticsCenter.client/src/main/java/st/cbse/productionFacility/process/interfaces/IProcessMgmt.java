@@ -2,7 +2,6 @@ package st.cbse.productionFacility.process.interfaces;
 
 import java.util.List;
 import java.util.UUID;
-//import jakarta.ejb.Local;
 import jakarta.ejb.Remote;
 import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.productionFacility.process.dto.ProcessDTO;
@@ -31,4 +30,8 @@ public interface IProcessMgmt {
     ProcessDTO getCurrentStepInfo(UUID processId);
 
     boolean isProcessComplete(UUID processId);
+
+    boolean pauseProcess(UUID processId);
+
+    boolean resumeProcess(UUID processId);
 }
