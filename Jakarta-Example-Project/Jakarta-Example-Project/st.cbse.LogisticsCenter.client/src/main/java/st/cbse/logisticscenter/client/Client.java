@@ -500,13 +500,11 @@ public class Client {
 		System.out.println("[✓] Order submitted!");
 	}
 
-	/* ------------------------- Paiement ------------------------------ */
+	/* ------------------------- Pay ------------------------------ */
 	private static void payWithSelection(UUID customerId) throws Exception {
 		try {
-			// D'abord afficher les commandes
 			viewOrderHistory(customerId);
 
-			// Filtrer uniquement les commandes non payées
 			Map<Integer, OrderDTO> unpaidOrders = new HashMap<>();
 			int num = 1;
 			for (Map.Entry<Integer, OrderDTO> entry : orderCache.entrySet()) {
@@ -521,7 +519,6 @@ public class Client {
 				return;
 			}
 
-			// Remplacer le cache temporairement
 			orderCache = unpaidOrders;
 			OrderDTO selectedOrder = selectOrder("Select order to pay:");
 
@@ -541,21 +538,59 @@ public class Client {
 	/* ===================================================================== */
 
 	private static void listOrdersWithNumbers() throws Exception {
-		List<OrderDTO> orders = managerMgmt.listAllOrders();
-		if (orders.isEmpty()) {
-			System.out.println("No orders.");
-			return;
-		}
+	    List<OrderDTO> orders = managerMgmt.listAllOrders();
+	    if (orders.isEmpty()) {
+	        System.out.println("No orders.");
+	        return;
+	    }
 
-		orderCache.clear();
-		int num = 1;
+	    orderCache.clear();
+	    requestCache.clear();
+	    int orderNum = 1;
+	    int globalRequestNum = 1;
 
-		System.out.println("\n=== All Orders ===");
-		for (OrderDTO o : orders) {
-			orderCache.put(num, o);
-			System.out.printf("[%d] %-11s  Customer=%s  Total=€%s%n",
-					num++, o.getStatus(), o.getCustomer(), o.getTotal());
-		}
+	    System.out.println("\n=== All Orders ===");
+	    for (OrderDTO o : orders) {
+	        orderCache.put(orderNum, o);
+	        
+	        // Order header with more details
+	        System.out.printf("%n[%d] Order ID: %s%n", orderNum, o.getId());
+	        System.out.printf("    Status: %-12s | Customer: %s | Total: €%s%n",
+	                o.getStatus(), o.getCustomer(), o.getTotal());
+	        
+	        // Show printing requests
+	        if (o.getPrintingRequests() != null && !o.getPrintingRequests().isEmpty()) {
+	            System.out.println("    Printing Requests:");
+	            
+	            for (PrintRequestDTO pr : o.getPrintingRequests()) {
+	                requestCache.put(globalRequestNum, pr);
+	                
+	                System.out.printf("      [Req %d] STL: %s%n", 
+	                        globalRequestNum++, pr.getStlPath());
+	                
+	                // Show note if exists
+	                if (pr.getNote() != null && !pr.getNote().isBlank()) {
+	                    System.out.printf("              Note: %s%n", pr.getNote());
+	                }
+	                
+	                // Show options
+	                if (pr.getOptions() != null && !pr.getOptions().isEmpty()) {
+	                    System.out.println("              Options:");
+	                    for (OptionDTO op : pr.getOptions()) {
+	                        System.out.printf("                - %-15s €%s%n", 
+	                                op.getType(), op.getPrice());
+	                    }
+	                }
+	            }
+	        } else {
+	            System.out.println("    No printing requests");
+	        }
+	        
+	        orderNum++;
+	    }
+	    
+	    // Show summary
+	    System.out.printf("%n=== Total Orders: %d ===%n", orders.size());
 	}
 
 	private static void addNoteWithSelection() throws Exception {
