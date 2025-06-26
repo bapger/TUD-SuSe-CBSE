@@ -10,14 +10,13 @@ public class Shipment {
 
     private Date shipmentDate;
 
-    private UUID orderId; // reference by ID only
+    private UUID orderId;
 
     public Shipment() {
         this.shipmentDate = new Date();
     }
 
 	public void setOrderId(UUID orderId2) {
-		// TODO Auto-generated method stub
-		
+		this.orderId = orderId2;	
 	}
 }

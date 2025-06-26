@@ -23,12 +23,10 @@ public class ShipmentBean implements IShipmentMgmt {
 
     @Override
     public void shipOrder(UUID orderId) {
-        // Create shipment record
         Shipment shipment = new Shipment();
         shipment.setOrderId(orderId);
         em.persist(shipment);
-        
-        // Update storage
+
         storageMgmt.markOrderAsShipped(orderId);
         
         LOG.info("Shipped order: " + orderId);
