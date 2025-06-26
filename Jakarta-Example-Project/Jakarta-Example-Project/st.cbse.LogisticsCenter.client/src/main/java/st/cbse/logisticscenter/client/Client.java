@@ -11,12 +11,14 @@ import java.util.UUID;
 
 import st.cbse.crm.dto.OptionDTO;
 import st.cbse.crm.dto.OrderDTO;
+import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.dto.ShipmentItemDTO;
 import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
 import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
 import st.cbse.crm.orderComponent.data.OrderStatus;
+import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
 import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
@@ -204,11 +206,20 @@ public class Client {
 		try {
 			System.out.println("\nProduction manager menu");
 			System.out.println("1  List processes");
+			System.out.println("2  Get processes by status");
+			System.out.println("3  Logout");
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
 				case "1":
 					listProcesses();
+					return true;
+				case "2":
+
+					return true;
+				case "3":
+					loggedProductionManager = null;
+					clearCache();
 					return true;
 				case "0":
 					return false;
