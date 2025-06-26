@@ -7,10 +7,12 @@ import st.cbse.crm.dto.OrderDTO;
 import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.orderComponent.data.*;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
+import st.cbse.productionFacility.production.beans.ProductionBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.logging.Logger;
 
 
 @Stateless
@@ -19,6 +21,8 @@ public class OrderBean implements IOrderMgmt {
 	@PersistenceContext
 	private EntityManager em;
 
+	private static final Logger LOG = Logger.getLogger(ProductionBean.class.getName());
+	
 	@Override
 	public UUID createOrder(UUID customerId, BigDecimal basePrice) {
 		if (customerId == null)
@@ -274,25 +278,58 @@ public class OrderBean implements IOrderMgmt {
 
 	@Override
 	public void updateStatusPrintingRequest(UUID printingRequestIDs, String status) {
-		PrintingRequest pr = em.find(PrintingRequest.class, printingRequestIDs);
-		if (pr == null)
-			throw new IllegalArgumentException("Printing request not found: " + printingRequestIDs);
-		pr.setStatus(PrintingRequestStatus.valueOf(status.toUpperCase(Locale.ROOT)));
-
-		if(status=="IN_STORAGE") {
-			Order order = em.find(Order.class,pr.getOrderId());
-			int count=0;
-			List<PrintingRequest> prs = order.getPrintingRequests();
-			for (PrintingRequest pr_temp : order.getPrintingRequests()) {
-				if(pr_temp.getStatus()!=PrintingRequestStatus.IN_STORAGE) {
-					count++;
-					break;
-				}
-			}
-			if(count==prs.size()) {
-				order.setOrderStatus(OrderStatus.FINISHED);
-			}
-		}
+	    LOG.info("========================================");
+	    LOG.info("Updating PrintingRequest status");
+	    LOG.info("PrintingRequest ID: " + printingRequestIDs);
+	    LOG.info("New status: " + status);
+	    
+	    PrintingRequest pr = em.find(PrintingRequest.class, printingRequestIDs);
+	    if (pr == null) {
+	        LOG.severe("Printing request not found: " + printingRequestIDs);
+	        throw new IllegalArgumentException("Printing request not found: " + printingRequestIDs);
+	    }
+	    
+	    LOG.info("Found PrintingRequest - Current status: " + pr.getStatus());
+	    LOG.info("Order ID: " + pr.getOrderId());
+	    
+	    PrintingRequestStatus newStatus = PrintingRequestStatus.valueOf(status.toUpperCase(Locale.ROOT));
+	    pr.setStatus(newStatus);
+	    em.merge(pr);
+	    
+	    LOG.info("PrintingRequest status updated to: " + newStatus);
+	    
+	    if ("IN_STORAGE".equals(status)) {
+	        LOG.info("Checking if all PrintingRequests of order " + pr.getOrderId() + " are complete");
+	        
+	        Order order = em.find(Order.class, pr.getOrderId());
+	        if (order == null) {
+	            LOG.warning("Order not found for ID: " + pr.getOrderId());
+	            return;
+	        }
+	        
+	        LOG.info("Order status before check: " + order.getOrderStatus());
+	        
+	        List<PrintingRequest> allRequests = order.getPrintingRequests();
+	        LOG.info("Order has " + allRequests.size() + " PrintingRequests");
+	        
+	        boolean allInStorage = true;
+	        for (PrintingRequest request : allRequests) {
+	            LOG.info("  PrintingRequest " + request.getId() + ": " + request.getStatus());
+	            if (request.getStatus() != PrintingRequestStatus.IN_STORAGE) {
+	                allInStorage = false;
+	            }
+	        }
+	        
+	        if (allInStorage) {
+	            LOG.info("✓ All PrintingRequests are IN_STORAGE - Marking order as FINISHED");
+	            order.setOrderStatus(OrderStatus.FINISHED);
+	            em.merge(order);
+	        } else {
+	            LOG.info("✗ Not all PrintingRequests are IN_STORAGE yet - Order remains: " + order.getOrderStatus());
+	        }
+	    }
+	    
+	    LOG.info("========================================");
 	}
 
 }

@@ -23,6 +23,7 @@ import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.process.dto.ProcessMapper;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
+import st.cbse.productionFacility.production.data.Transport.TransportStatus;
 import st.cbse.productionFacility.production.interfaces.IProductionMgmt;
 import st.cbse.productionFacility.production.machine.dto.MachineDTO;
 import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
@@ -481,18 +482,38 @@ public class ProcessBean implements IProcessMgmt {
             process.setStatus(ProcessStatus.IN_PROGRESS);
             em.merge(process);
             
-            // NE PAS traiter immédiatement la prochaine étape
-            // Planifier le traitement pour plus tard
             scheduleNextStepProcessing(process.getId());
             
         } else {
-            // Toutes les étapes sont terminées
-            LOG.info("All steps completed - scheduling delivery to storage");
-            scheduleStorageDelivery(process.getId(), currentStep.getAssignedMachineId());
+            // MODIFICATION : Vérifier si c'est un appel depuis le transport storage
+            // Si oui, ne pas replanifier la livraison
+            if (!"PACKAGING".equals(currentStep.getStepType()) || 
+                !isTransportToStorageInProgress(processId)) {
+                LOG.info("All steps completed - scheduling delivery to storage");
+                scheduleStorageDelivery(process.getId(), currentStep.getAssignedMachineId());
+            } else {
+                LOG.info("All steps completed - storage delivery already in progress");
+                process.setStatus(ProcessStatus.COMPLETED);
+                em.merge(process);
+            }
         }
         
         return true;
     }
+
+    // Méthode helper pour vérifier s'il y a un transport vers le storage en cours
+    private boolean isTransportToStorageInProgress(UUID processId) {
+        // Vérifier s'il existe un transport IN_TRANSIT vers le storage (toMachineId = null)
+        Long count = em.createQuery(
+            "SELECT COUNT(t) FROM Transport t WHERE t.processId = :processId " +
+            "AND t.status = :status AND t.toMachineId IS NULL", Long.class)
+            .setParameter("processId", processId)
+            .setParameter("status", TransportStatus.IN_TRANSIT)
+            .getSingleResult();
+        
+        return count > 0;
+    }
+
 
     // Nouvelle méthode pour planifier le traitement différé
     private void scheduleNextStepProcessing(UUID processId) {
