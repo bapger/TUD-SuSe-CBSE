@@ -85,11 +85,8 @@ public class ProcessBean implements IProcessMgmt {
         LOG.info("Total steps in process: " + process.getSteps().size());
         LOG.info("Process status: " + process.getStatus());
         LOG.info("Created process " + process.getId() + " with " + process.getSteps().size() + " steps");
-        
-        // Essayer de démarrer le process automatiquement
         LOG.info("Attempting to start process automatically...");
         tryToStartProcess(process);
-        
         LOG.info("========================================");
         
         return process.getId();
@@ -98,7 +95,6 @@ public class ProcessBean implements IProcessMgmt {
     private void tryToStartProcess(Process process) {
         LOG.info("Checking if process can be started: " + process.getId());
         
-        // Récupérer la première étape
         ProcessStep firstStep = process.getCurrentStep();
         if (firstStep == null) {
             LOG.warning("No first step found for process " + process.getId());
@@ -107,11 +103,9 @@ public class ProcessBean implements IProcessMgmt {
         
         LOG.info("First step type: " + firstStep.getStepType());
         
-        // Mapper le type d'étape au type de machine
         String machineType = mapStepToMachineType(firstStep.getStepType());
         LOG.info("Looking for available machines of type: " + machineType);
         
-        // Si IMachineMgmt a une méthode qui retourne directement des DTOs
         List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
         LOG.info("Found " + availableMachines.size() + " available machines");
         
@@ -119,15 +113,12 @@ public class ProcessBean implements IProcessMgmt {
             MachineDTO machineDTO = availableMachines.get(0);
             LOG.info("Found available machine: " + machineDTO.getId() + " (Type: " + machineDTO.getType() + ")");
             
-            // Réserver la machine pour ce process
             boolean reserved = machineMgmt.reserveMachine(machineDTO.getId(), process.getId());
             if (reserved) {
                 LOG.info("Machine " + machineDTO.getId() + " reserved successfully");
                 
-                // Assigner la machine à l'étape
                 firstStep.setAssignedMachineId(machineDTO.getId());
                 
-                // Mettre à jour le statut du process
                 process.setStatus(ProcessStatus.IN_PROGRESS);
                 em.merge(process);
                 
@@ -142,7 +133,6 @@ public class ProcessBean implements IProcessMgmt {
                     if (executed) {
                         LOG.info("Machine " + machineDTO.getId() + " executed successfully!");
                         
-                        // Vérifier si on peut passer à l'étape suivante
                         ProcessStep nextStep = process.getCurrentStep();
                         if (nextStep != null && !nextStep.equals(firstStep)) {
                             LOG.info("Moving to next step: " + nextStep.getStepType());
@@ -190,7 +180,6 @@ public class ProcessBean implements IProcessMgmt {
                     ", OutputProcessId=" + fromMachineDTO.getOutputProcessId() + 
                     ", HasOutput=" + fromMachineDTO.isHasOutput());
             
-            // MODIFICATION : L'outputProcessId contient maintenant l'itemId pour les machines qui créent des items
             UUID itemId = fromMachineDTO.getOutputProcessId();
             
             if (itemId == null) {
@@ -204,7 +193,6 @@ public class ProcessBean implements IProcessMgmt {
             
             LOG.info("Output is ready with itemId: " + itemId + " - proceeding with transport setup");
             
-            // Rechercher la machine cible...
             String machineType = mapStepToMachineType(nextStep.getStepType());
             List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
             
@@ -260,7 +248,7 @@ public class ProcessBean implements IProcessMgmt {
             case "PRINTING":
                 return "PrintingMachine";
             case "PAINT":
-                return "PaintMachine";  // <-- Changer ici !
+                return "PaintMachine";
             case "SMOOTHING":
                 return "SmoothingMachine";
             case "ENGRAVING":
@@ -373,12 +361,10 @@ public class ProcessBean implements IProcessMgmt {
             return false;
         }
         
-        // Sauvegarder l'ancien statut pour la reprise
         ProcessStatus oldStatus = process.getStatus();
         process.setStatus(ProcessStatus.PAUSED);
         em.merge(process);
         
-        // Arrêter toutes les machines actives pour ce process
         for (ProcessStep step : process.getSteps()) {
             if (step.getAssignedMachineId() != null && !step.isCompleted()) {
                 pauseMachineForProcess(step.getAssignedMachineId(), processId);
@@ -407,14 +393,11 @@ public class ProcessBean implements IProcessMgmt {
         process.setStatus(ProcessStatus.IN_PROGRESS);
         em.merge(process);
         
-        // Reprendre le traitement là où il s'était arrêté
         ProcessStep currentStep = process.getCurrentStep();
         if (currentStep != null) {
             if (currentStep.getAssignedMachineId() != null) {
-                // Si une machine était assignée, la reprendre
                 resumeMachineForProcess(currentStep.getAssignedMachineId(), processId);
             } else {
-                // Sinon, essayer de traiter l'étape
                 scheduleNextStepProcessing(processId);
             }
         }
@@ -423,12 +406,10 @@ public class ProcessBean implements IProcessMgmt {
         return true;
     }
 
-    // Méthode helper pour mettre en pause une machine
     private void pauseMachineForProcess(UUID machineId, UUID processId) {
         machineMgmt.pauseMachine(machineId);
     }
 
-    // Méthode helper pour reprendre une machine
     private void resumeMachineForProcess(UUID machineId, UUID processId) {
         machineMgmt.resumeMachine(machineId, processId);
     }
@@ -448,7 +429,6 @@ public class ProcessBean implements IProcessMgmt {
         currentStep.setCompleted(true);
         LOG.info("Step " + currentStep.getStepType() + " marked as completed");
         
-        // Vérifier s'il y a une prochaine étape
         if (process.moveToNextStep()) {
             process.setStatus(ProcessStatus.IN_PROGRESS);
             em.merge(process);
@@ -456,8 +436,6 @@ public class ProcessBean implements IProcessMgmt {
             scheduleNextStepProcessing(process.getId());
             
         } else {
-            // MODIFICATION : Vérifier si c'est un appel depuis le transport storage
-            // Si oui, ne pas replanifier la livraison
             if (!"PACKAGING".equals(currentStep.getStepType()) || 
                 !isTransportToStorageInProgress(processId)) {
                 LOG.info("All steps completed - scheduling delivery to storage");
@@ -472,9 +450,7 @@ public class ProcessBean implements IProcessMgmt {
         return true;
     }
 
-    // Méthode helper pour vérifier s'il y a un transport vers le storage en cours
     private boolean isTransportToStorageInProgress(UUID processId) {
-        // Vérifier s'il existe un transport IN_TRANSIT vers le storage (toMachineId = null)
         Long count = em.createQuery(
             "SELECT COUNT(t) FROM Transport t WHERE t.processId = :processId " +
             "AND t.status = :status AND t.toMachineId IS NULL", Long.class)
@@ -485,10 +461,7 @@ public class ProcessBean implements IProcessMgmt {
         return count > 0;
     }
 
-
-    // Nouvelle méthode pour planifier le traitement différé
     private void scheduleNextStepProcessing(UUID processId) {
-        // Créer un timer pour traiter la prochaine étape dans 1 seconde
         timerService.createSingleActionTimer(1000, new TimerConfig(
             new ProcessingTask(processId, ProcessingTask.Type.NEXT_STEP), false));
     }
@@ -530,7 +503,6 @@ public class ProcessBean implements IProcessMgmt {
         }
     }
 
-    // Classe interne pour les tâches
     private static class ProcessingTask implements Serializable {
         /**
 		 * 

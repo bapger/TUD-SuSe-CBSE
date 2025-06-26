@@ -21,7 +21,6 @@ public class MachineInitializerBean {
         LOG.info("========================================");
         LOG.info("Initializing production machines...");
         
-        // Vérifier si des machines existent déjà
         Long machineCount = em.createQuery("SELECT COUNT(m) FROM Machine m", Long.class)
                               .getSingleResult();
         
@@ -30,14 +29,12 @@ public class MachineInitializerBean {
             return;
         }
         
-        // Créer les différents types de machines
         createPrintingMachines();
         createPaintMachines();
         createSmoothingMachines();
         createEngravingMachines();
         createPackagingMachines();
         
-        // Compter le total des machines créées
         Long totalMachines = em.createQuery("SELECT COUNT(m) FROM Machine m", Long.class)
                                .getSingleResult();
         
@@ -48,7 +45,6 @@ public class MachineInitializerBean {
     private void createPrintingMachines() {
         LOG.info("Creating Printing Machines...");
         
-        // Créer 3 machines d'impression 3D
         for (int i = 1; i <= 3; i++) {
             PrintingMachine machine = new PrintingMachine(true, true);
             machine.setStatus(MachineStatus.AVAILABLE);
@@ -60,7 +56,6 @@ public class MachineInitializerBean {
     private void createPaintMachines() {
         LOG.info("Creating Paint Machines...");
         
-        // Créer 2 machines de peinture
         for (int i = 1; i <= 2; i++) {
             PaintMachine machine = new PaintMachine(true, true);
             machine.setStatus(MachineStatus.AVAILABLE);
@@ -72,7 +67,6 @@ public class MachineInitializerBean {
     private void createSmoothingMachines() {
         LOG.info("Creating Smoothing Machines...");
         
-        // Créer 2 machines de lissage
         for (int i = 1; i <= 2; i++) {
             SmoothingMachine machine = new SmoothingMachine(true, true);
             machine.setStatus(MachineStatus.AVAILABLE);
@@ -84,7 +78,6 @@ public class MachineInitializerBean {
     private void createEngravingMachines() {
         LOG.info("Creating Engraving Machines...");
         
-        // Créer 1 machine de gravure (plus spécialisée, donc moins nombreuse)
         EngravingMachine machine = new EngravingMachine(true, true);
         machine.setStatus(MachineStatus.AVAILABLE);
         em.persist(machine);
@@ -94,7 +87,6 @@ public class MachineInitializerBean {
     private void createPackagingMachines() {
         LOG.info("Creating Packaging Machines...");
         
-        // Créer 2 machines d'emballage
         for (int i = 1; i <= 2; i++) {
             PackagingMachine machine = new PackagingMachine(true, true);
             machine.setStatus(MachineStatus.AVAILABLE);
@@ -103,7 +95,6 @@ public class MachineInitializerBean {
         }
     }
     
-    // Méthode utilitaire pour réinitialiser toutes les machines (utile pour les tests)
     public void resetAllMachines() {
         LOG.info("Resetting all machines to AVAILABLE status...");
         
@@ -119,7 +110,6 @@ public class MachineInitializerBean {
         LOG.info("Reset " + updated + " machines to AVAILABLE status");
     }
     
-    // Méthode pour afficher l'état actuel des machines
     public void displayMachineStatus() {
         LOG.info("=== Current Machine Status ===");
         

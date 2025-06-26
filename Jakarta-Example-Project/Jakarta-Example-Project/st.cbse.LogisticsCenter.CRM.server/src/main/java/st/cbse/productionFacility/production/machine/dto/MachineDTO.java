@@ -30,9 +30,7 @@ public class MachineDTO implements Serializable {
         this.type = type;
         this.status = status;
     }
-    
-    /* ---------- Getters/Setters ---------- */
-    
+   
     public UUID getId() {
         return id;
     }
@@ -112,8 +110,6 @@ public class MachineDTO implements Serializable {
     public void setActionMessage(String actionMessage) {
         this.actionMessage = actionMessage;
     }
-    
-    /* ---------- Méthodes utilitaires ---------- */
     
     public boolean isAvailable() {
         return "AVAILABLE".equals(status);

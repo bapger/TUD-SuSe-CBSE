@@ -1,9 +1,7 @@
 package st.cbse.productionFacility.productionManagerComponent.beans;
 
 import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.EJB;
@@ -11,11 +9,9 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
 
 import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.productionManagerComponent.data.ProductionManager;
-import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 
 @Stateless
@@ -26,7 +22,6 @@ public class ProductionManagerBean implements IProductionManagerMgmt {
     @EJB
     private IProcessMgmt processService;
 
-    // Initiate a production manager in the database when the server starts
     @PostConstruct
     public void initProductionManager() {
         if (em.find(ProductionManager.class, "prodManager") == null) {
@@ -36,7 +31,6 @@ public class ProductionManagerBean implements IProductionManagerMgmt {
 
     @Override
     public String loginProductionManager(String email, String password) {
-
         try {
             return em.createQuery(
                     "SELECT pm.email FROM ProductionManager pm " +

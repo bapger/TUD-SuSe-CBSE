@@ -118,14 +118,6 @@ public class ProductionBean implements IProductionMgmt {
 	    }
 
 	    LOG.info("Attempting to execute machine " + machineId);
-
-	    // PROBLÈME : On n'a pas le processId ici !
-	    // Cette méthode fait partie de l'interface IProductionMgmt
-	    // Il faut soit :
-	    // 1. Modifier l'interface pour accepter processId
-	    // 2. Ou récupérer le processId depuis la machine
-	    
-	    // Solution temporaire : récupérer depuis la machine
 	    Machine machine = machineMgmt.getMachine(machineId);
 	    if (machine == null) {
 	        LOG.warning("Machine not found: " + machineId);
@@ -192,7 +184,6 @@ public class ProductionBean implements IProductionMgmt {
 
 		LOG.info("Retrieved item " + outputItem + " from machine " + fromMachineId);
 
-		// Vérifier le statut de la machine cible
 		MachineStatus toMachineStatus = toMachine.getStatus();
 
 		if (toMachineStatus == MachineStatus.RESERVED) {
@@ -204,13 +195,11 @@ public class ProductionBean implements IProductionMgmt {
 			return false;
 		}
 
-		// Vérifier que la machine peut accepter l'input
 		if (toMachine.getInputProcessId() != null) {
 			LOG.warning("Target machine " + toMachineId + " already has input: " + toMachine.getInputProcessId());
 			return false;
 		}
 
-		// Vérifier que la machine a la capacité de recevoir des inputs
 		if (!toMachine.hasInput()) {
 			LOG.warning("Target machine " + toMachineId + " cannot accept inputs (hasInput=false)");
 			return false;
@@ -220,7 +209,6 @@ public class ProductionBean implements IProductionMgmt {
 
 		storageMgmt.updateItemLocation(itemId, "In transit from " + fromMachine.getMachineType() + " to " + toMachine.getMachineType());
 
-		// Créer une entité Transport
 		Transport transport = new Transport(itemId, processId, fromMachineId, toMachineId);
 		transport.setStatus(TransportStatus.IN_TRANSIT);
 		em.persist(transport);
@@ -266,7 +254,6 @@ public class ProductionBean implements IProductionMgmt {
 
 	    LOG.info("Storage space available - proceeding with delivery");
 	    
-	    // Créer un transport vers le storage (toMachineId = null)
 	    storageMgmt.updateItemLocation(itemId, "In transit to storage");
 	    
 	    Transport transport = new Transport(itemId, processId, fromMachineId, null);
@@ -275,7 +262,6 @@ public class ProductionBean implements IProductionMgmt {
 	    
 	    LOG.info("Transport to storage created with ID: " + transport.getId() + " - Timer set for 2 seconds");
 	    
-	    // Timer de 2 secondes pour le transport vers le storage
 	    timerService.createSingleActionTimer(2000, new TimerConfig(transport.getId(), false));
 	    
 	    return true;
@@ -303,7 +289,6 @@ public class ProductionBean implements IProductionMgmt {
 	        return;
 	    }
 
-	    // Vérifier si le process est en pause
 	    ProcessDTO processDTO = processMgmt.getProcess(transport.getProcessId());
 	    if (processDTO != null && "PAUSED".equals(processDTO.getStatus())) {
 	        LOG.info("Process " + transport.getProcessId() + " is paused - transport continues to destination");
@@ -312,29 +297,24 @@ public class ProductionBean implements IProductionMgmt {
 	    LOG.info("Processing transport delivery for item " + transport.getItemId());
 
 	    if (transport.getToMachineId() != null) {
-	        // Transport vers une autre machine
 	        Machine toMachine = machineMgmt.getMachine(transport.getToMachineId());
 	        machineMgmt.notifyItemArrived(transport.getToMachineId(), transport.getItemId());
 	        storageMgmt.updateItemLocation(transport.getItemId(), "At " + toMachine.getMachineType());
 
 	        processMgmt.notifyStepCompleted(transport.getProcessId(), transport.getFromMachineId());
 
-	        // Vérifier si le process est en pause avant de programmer la machine
 	        if (processDTO != null && !"PAUSED".equals(processDTO.getStatus())) {
 	            if (machineMgmt.programMachine(transport.getToMachineId())) {
 	                machineMgmt.executeMachine(transport.getToMachineId(), transport.getProcessId());
 	            }
 	        } else {
 	            LOG.info("Process is paused - machine " + transport.getToMachineId() + " will wait with item in input");
-	            // L'item reste dans l'input de la machine jusqu'à la reprise du process
 	        }
 
 	        LOG.info("Item " + transport.getItemId() + " delivered to " + toMachine.getMachineType());
 	    } else {
-	        // Transport vers le storage
 	        LOG.info("Delivering to storage - Converting process " + transport.getProcessId() + " to finished product");
 	        
-	        // Le transport vers le storage continue même si le process est en pause
 	        boolean converted = storageMgmt.convertToFinished(transport.getProcessId());
 	        
 	        if (converted) {
@@ -352,18 +332,6 @@ public class ProductionBean implements IProductionMgmt {
 
 	    LOG.info("Transport " + transportId + " marked as DELIVERED");
 	}
-
-	//    @Schedule(hour="*", minute="*", second="*/30", persistent=false)
-	//    public void checkPendingTransports() {
-	//        List<Transport> pendingTransports = em.createQuery(
-	//            "SELECT t FROM Transport t WHERE t.status = :status ORDER BY t.createdAt",
-	//            Transport.class)
-	//            .setParameter("status", TransportStatus.PENDING)
-	//            .setMaxResults(5)
-	//            .getResultList();
-	//            
-	//        LOG.fine("Checking " + pendingTransports.size() + " pending transports");
-	//    }
 
 	private String mapStepToMachineType(Step step) {
 		LOG.fine("Mapping step type to machine type: " + step.getType());
