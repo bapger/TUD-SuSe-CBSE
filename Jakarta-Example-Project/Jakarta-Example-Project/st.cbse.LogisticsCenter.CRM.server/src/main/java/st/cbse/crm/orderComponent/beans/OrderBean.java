@@ -242,11 +242,35 @@ public class OrderBean implements IOrderMgmt {
                  .collect(java.util.stream.Collectors.toList());
     }
 
-	@Override
-	public void addNoteToPrintRequest(UUID requestId, String note) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void addNoteToPrintRequest(UUID requestId, String note) {
+
+        if (requestId == null) {
+            throw new IllegalArgumentException("requestId must not be null");
+        }
+        if (note == null || note.isBlank()) {
+            throw new IllegalArgumentException("note must not be empty");
+        }
+
+        try {
+            /* 1. Récupérer la PrintingRequest (avec verrou optimiste si besoin) */
+            PrintingRequest pr = em.createQuery(
+                    "SELECT pr FROM PrintingRequest pr WHERE pr.id = :id",
+                    PrintingRequest.class)
+                .setParameter("id", requestId)
+                .getSingleResult();                 // lèvera NoResultException si absent
+
+            /* 2. Mettre à jour la note */
+            pr.setNote(note);                       // ou pr.appendNote(note) si liste
+
+            /* 3. Flush pour que l’exception (si contrainte) soit locale */
+            em.flush();
+        }
+        catch (NoResultException ex) {
+            throw new NoResultException("PrintRequest not found: " + requestId);
+        }
+        /* les autres PersistenceException sont propagées telles quelles */
+    }
 
 
 
