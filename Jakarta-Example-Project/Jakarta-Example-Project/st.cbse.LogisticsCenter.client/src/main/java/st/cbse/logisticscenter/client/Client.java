@@ -28,7 +28,7 @@ import st.cbse.productionFacility.storage.interfaces.IStorageMgmt;
 
 public class Client {
 
-	/* --- EJB references -------------------------------------------------- */
+	// EJB references
 	private static ICustomerMgmt customerMgmt;
 	private static IManagerMgmt managerMgmt;
 	private static IProductionManagerMgmt productionManagerMgmt;
@@ -37,19 +37,18 @@ public class Client {
 	private static IShipmentMgmt shipmentMgmt;
 	private static IStorageMgmt storageMgmt;
 
-	/* --- Session state --------------------------------------------------- */
+	// Session state
 	private static UUID loggedCustomer;
 	private static String loggedManager;
 	private static String loggedProductionManager;
 
-	/* --- Cache pour la sélection par numéro ------------------------------ */
+	// Cache pour la sélection par numéro
 	private static Map<Integer, OrderDTO> orderCache = new HashMap<>();
 	private static Map<Integer, PrintRequestDTO> requestCache = new HashMap<>();
 	private static Map<Integer, FinishedProductsDto> storageCache = new HashMap<>();
 
 	private static final Scanner in = new Scanner(System.in);
 
-	/* --------------------------------------------------------------------- */
 	public static void main(String[] args) {
 		try {
 			InitialContext ctx = getContext();
@@ -89,9 +88,11 @@ public class Client {
 		}
 	}
 
-	/* ===================================================================== */
-	/* MENUS */
-	/* ===================================================================== */
+	/*
+	 * =====================================================================
+	 * MENUS
+	 * =====================================================================
+	 */
 
 	private static boolean mainMenu() throws Exception {
 		try {
@@ -289,9 +290,11 @@ public class Client {
 		}
 	}
 
-	/* ===================================================================== */
-	/* HELPER METHODS */
-	/* ===================================================================== */
+	/*
+	 * =====================================================================
+	 * HELPER METHODS
+	 * =====================================================================
+	 */
 
 	private static void clearCache() {
 		orderCache.clear();
@@ -349,9 +352,11 @@ public class Client {
 		}
 	}
 
-	/* ===================================================================== */
-	/* AUTH / REGISTRATION */
-	/* ===================================================================== */
+	/*
+	 * =====================================================================
+	 * AUTH / REGISTRATION
+	 * =====================================================================
+	 */
 
 	private static void registerCustomer() throws Exception {
 		System.out.println("\n[Register customer]");
@@ -410,7 +415,7 @@ public class Client {
 		}
 	}
 
-	/* ---------------- Order history ---------------- */
+	// Order history
 	private static void viewOrderHistory(UUID customerId) throws Exception {
 		List<OrderDTO> orders = orderMgmt.getOrdersByCustomer(customerId);
 
@@ -447,7 +452,7 @@ public class Client {
 		}
 	}
 
-	/* ------------------- Création d'une commande --------------------- */
+	// Order creation
 	private static void createNewOrder(UUID customerId) throws Exception {
 		System.out.print("Base price (€): ");
 		BigDecimal base = new BigDecimal(in.nextLine());
@@ -500,10 +505,10 @@ public class Client {
 		System.out.println("[✓] Order submitted!");
 	}
 
-	/* ------------------------- Pay ------------------------------ */
+	//Payement
 	private static void payWithSelection(UUID customerId) throws Exception {
 	    try {
-	        // Get all orders for this customer
+	        
 	        List<OrderDTO> orders = orderMgmt.getOrdersByCustomer(customerId);
 	        
 	        if (orders.isEmpty()) {
@@ -516,7 +521,6 @@ public class Client {
 	        
 	        System.out.println("\n=== Payment Options ===");
 	        
-	        // Show unpaid orders (before shipping)
 	        System.out.println("\n-- Unpaid Orders (Pre-shipping) --");
 	        boolean hasUnpaidOrders = false;
 	        for (OrderDTO order : orders) {
@@ -532,12 +536,10 @@ public class Client {
 	            System.out.println("  None");
 	        }
 	        
-	        // Show unpaid invoices (shipped orders)
 	        System.out.println("\n-- Unpaid Invoices (Post-shipping) --");
 	        boolean hasUnpaidInvoices = false;
 	        for (OrderDTO order : orders) {
 	            if (OrderStatus.SHIPPED.toString().equals(order.getStatus())) {
-	                // Check if this shipped order has an unpaid invoice
 	                try {
 	                    if (orderMgmt.hasUnpaidInvoice(order.getId())) {
 	                        payableItems.put(num, order);
@@ -551,7 +553,6 @@ public class Client {
 	                        hasUnpaidInvoices = true;
 	                    }
 	                } catch (Exception e) {
-	                    // Skip if can't check invoice status
 	                }
 	            }
 	        }
@@ -564,7 +565,6 @@ public class Client {
 	            return;
 	        }
 	        
-	        // Let user select what to pay
 	        orderCache = payableItems;
 	        OrderDTO selectedOrder = selectOrder("Select item to pay:");
 	        
@@ -573,13 +573,11 @@ public class Client {
 	            String ref = in.nextLine();
 	            
 	            if (OrderStatus.SHIPPED.toString().equals(selectedOrder.getStatus())) {
-	                // Pay invoice
 	                System.out.println("\n[...] Processing invoice payment...");
 	                orderMgmt.payInvoice(selectedOrder.getId(), ref);
 	                System.out.println("[✓] Invoice paid successfully!");
 	                System.out.println("    Thank you for your payment.");
 	            } else {
-	                // Pay order (before shipping)
 	                System.out.println("\n[...] Processing order payment...");
 	                orderMgmt.pay(selectedOrder.getId(), ref);
 	                System.out.println("[✓] Order payment booked.");
@@ -590,9 +588,9 @@ public class Client {
 	    }
 	}
 
-	/* ===================================================================== */
-	/* MANAGER WORKFLOWS */
-	/* ===================================================================== */
+	/* ===================================================================== 
+	* MANAGER WORKFLOWS
+	* ===================================================================== */
 
 	private static void listOrdersWithNumbers() throws Exception {
 	    List<OrderDTO> orders = managerMgmt.listAllOrders();
@@ -610,12 +608,10 @@ public class Client {
 	    for (OrderDTO o : orders) {
 	        orderCache.put(orderNum, o);
 	        
-	        // Order header with more details
 	        System.out.printf("%n[%d] Order ID: %s%n", orderNum, o.getId());
 	        System.out.printf("    Status: %-12s | Customer: %s | Total: €%s%n",
 	                o.getStatus(), o.getCustomer(), o.getTotal());
 	        
-	        // Show printing requests
 	        if (o.getPrintingRequests() != null && !o.getPrintingRequests().isEmpty()) {
 	            System.out.println("    Printing Requests:");
 	            
@@ -625,12 +621,10 @@ public class Client {
 	                System.out.printf("      [Req %d] STL: %s%n", 
 	                        globalRequestNum++, pr.getStlPath());
 	                
-	                // Show note if exists
 	                if (pr.getNote() != null && !pr.getNote().isBlank()) {
 	                    System.out.printf("              Note: %s%n", pr.getNote());
 	                }
 	                
-	                // Show options
 	                if (pr.getOptions() != null && !pr.getOptions().isEmpty()) {
 	                    System.out.println("              Options:");
 	                    for (OptionDTO op : pr.getOptions()) {
@@ -646,7 +640,6 @@ public class Client {
 	        orderNum++;
 	    }
 	    
-	    // Show summary
 	    System.out.printf("%n=== Total Orders: %d ===%n", orders.size());
 	}
 
@@ -656,14 +649,12 @@ public class Client {
 		if (selectedOrder == null)
 			return;
 
-		// Afficher les requests de cette commande
 		requestCache.clear();
 		int num = 1;
 		System.out.println("\n=== Printing Requests ===");
 		for (PrintRequestDTO pr : selectedOrder.getPrintingRequests()) {
-			requestCache.put(num, pr);
-			System.out.printf("[%d] STL=%s%n", num++, pr.getStlPath());
-			if (pr.getNote() != null && !pr.getNote().isBlank()) {
+			requestCache.p
+
 				System.out.println("    Current note: " + pr.getNote());
 			}
 		}
@@ -683,7 +674,6 @@ public class Client {
 		if (selectedOrder == null)
 			return;
 
-		// Afficher les requests de cette commande
 		requestCache.clear();
 		int num = 1;
 		System.out.println("\n=== Printing Requests ===");
@@ -712,10 +702,8 @@ public class Client {
 	}
 
 	private static void shipOrderWithSelection() throws Exception {
-	    // Display all orders first
 	    listOrdersWithNumbers();
 	    
-	    // Filter to show only FINISHED orders
 	    Map<Integer, OrderDTO> finishedOrders = new HashMap<>();
 	    int num = 1;
 	    
@@ -744,10 +732,7 @@ public class Client {
 	        try {
 	            System.out.println("\n[...] Processing shipment...");
 	            
-	            // 1. Create shipment
 	            shipmentMgmt.shipOrder(selectedOrder.getId());
-	            
-	            // 2. Create invoice and update order status
 	            orderMgmt.createInvoiceForShippedOrder(selectedOrder.getId());
 	            
 	            System.out.println("\n[✓] Order shipped successfully!");
@@ -778,11 +763,8 @@ public class Client {
 			System.out.printf("[%d] Request=%s  Order=%s%n",
 					num++, item.getPrintRequestId(), item.getOrderId());
 		}
-	}
 
-	/* ===================================================================== */
-	/* PRODUCTION MANAGER WORKFLOWS */
-	/* ===================================================================== */
+	* ===================================================================== */
 
 	private static void listProcesses() throws Exception {
 		List<ProcessDTO> processes = productionManagerMgmt.getAllProcesses();
@@ -813,9 +795,9 @@ public class Client {
 	private static void cancelProcess(ProcessDTO process) {
 		processMgmt.cancelProcess(process.getId());
 	}
-	/* ===================================================================== */
-	/* JNDI context helper */
-	/* ===================================================================== */
+	/* =====================================================================
+	* JNDI context helper
+	* ===================================================================== */
 
 	private static InitialContext getContext() throws NamingException {
 		Properties p = new Properties();
