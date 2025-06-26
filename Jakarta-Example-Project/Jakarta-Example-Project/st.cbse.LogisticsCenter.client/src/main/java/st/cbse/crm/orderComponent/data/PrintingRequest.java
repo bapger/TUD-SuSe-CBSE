@@ -15,19 +15,18 @@ public class PrintingRequest {
 
     private String description;
 
-    private String stlPath;           // chemin/URI du fichier STL
+    private String stlPath;          
 
-    private String note;              // note libre du client
+    private String note;              
 
 
     private Order order;
 
     private List<Option> options = new ArrayList<>();
 
-    /* -------------------------------------------------- */
+
     public PrintingRequest() { }
 
-    /* ================= setters ======================== */
 
     public void setDescription(String description) {
         this.description = description;
@@ -45,7 +44,6 @@ public class PrintingRequest {
         this.note = note;
     }
 
-    /* ================= getters ======================== */
 
     public UUID getId() {
         return id;
@@ -63,9 +61,7 @@ public class PrintingRequest {
         return note;
     }
 
-    /**
-     * Retourne le total des prix de toutes les options de cette demande.
-     */
+
     public BigDecimal getOptionsPrice() {
         BigDecimal total = BigDecimal.ZERO;
         for (Option o : options) {
@@ -76,17 +72,11 @@ public class PrintingRequest {
         return total;
     }
 
-    /* ================= helpers ======================== */
-
-    /**
-     * Ajoute une option en maintenant la cohérence bidirectionnelle.
-     */
     public void addOption(Option option) {
         option.setPrintingRequest(this);
         options.add(option);
     }
 
-    /* alias utilisé ailleurs dans le code */
     public void add(Option option) {
         addOption(option);
     }

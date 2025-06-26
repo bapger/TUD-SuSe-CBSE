@@ -23,7 +23,7 @@ public class OrderDTO implements Serializable {
     private final BigDecimal            total;
     private final List<PrintRequestDTO> printingRequests;
 
-    /* constructeur privé : on veut passer par la factory of() */
+
     private OrderDTO(UUID id,
                      String status,
                      String customerName,
@@ -39,7 +39,6 @@ public class OrderDTO implements Serializable {
         this.printingRequests = List.copyOf(requests);
     }
 
-    /* -------- factory -------- */
     public static OrderDTO of(Order o) {
         List<PrintRequestDTO> reqDtos = o.getPrintingRequests()
                                          .stream()
@@ -54,7 +53,6 @@ public class OrderDTO implements Serializable {
                             reqDtos);
     }
 
-    /* ---------------- getters ---------------- */
     public UUID getId()                       { return id; }
     public String getStatus()                 { return status; }
     public String getCustomer(){return customerName;}
