@@ -441,7 +441,7 @@ public class Client {
 		listOrdersWithNumbers();
 		OrderDTO selectedOrder = selectOrder("Select order to send to production:");
 
-		if (selectedOrder != null && selectedOrder.getStatus() == OrderStatus.COMPLETED.toString()) {
+		if (selectedOrder != null && selectedOrder.getStatus() == "COMPLETED") {
 			managerMgmt.sendPrintToProd(selectedOrder.getId());
 			System.out.println("Order sent to production.");
 		}else{
