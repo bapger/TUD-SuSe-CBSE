@@ -28,9 +28,6 @@ public class OrderBean implements IOrderMgmt {
 		if (customerId == null)
 			throw new IllegalArgumentException("Customer ID cannot be null");
 
-		// -----------------------------------------------------------------
-		// 1) Vérifier l’existence sans importer la classe Customer
-		// -----------------------------------------------------------------
 		Long nb = em.createQuery(
 				"SELECT COUNT(c) FROM Customer c WHERE c.id = :cid",
 				Long.class)
@@ -95,13 +92,12 @@ public class OrderBean implements IOrderMgmt {
 		addOption(requestId, opt);
 	}
 
-	/* ----------------------------------------------------------------- */
 	private void addOption(UUID requestId, Option option) {
 		PrintingRequest pr = em.find(PrintingRequest.class, requestId);
 		if (pr == null)
 			throw new IllegalArgumentException("Request not found: " + requestId);
 
-		option.setPrice(unitPrice(option));     // prix unitaire
+		option.setPrice(unitPrice(option));  
 		option.setPrintingRequest(pr);
 		em.persist(option);
 
@@ -110,7 +106,7 @@ public class OrderBean implements IOrderMgmt {
 	}
 
 	/* ================================================================= */
-	/* 4.  Finalisation & paiement                                       */
+	/* 4.  Finalization & Paying                                       */
 	/* ================================================================= */
 	@Override
 	public void finalizeOrder(UUID orderId) {
@@ -138,7 +134,7 @@ public class OrderBean implements IOrderMgmt {
 	}
 
 	/* ============================================================= */
-	/* 5.  Order history (DTOs, not entities)                        */
+	/* 5.  Order history                 */
 	/* ============================================================= */
 	@Override
 	public List<OrderDTO> getOrdersByCustomer(UUID customerId) {

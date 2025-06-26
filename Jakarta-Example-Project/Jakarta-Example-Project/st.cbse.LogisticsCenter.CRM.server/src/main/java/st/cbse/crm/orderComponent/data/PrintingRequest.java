@@ -19,19 +19,16 @@ public class PrintingRequest {
 	@Column(length = 1024)
 	private String note;
 
-	/* --- relations --- */
 	@ManyToOne
 	private Order order;
 
 	@OneToMany(mappedBy = "printingRequest", fetch = FetchType.LAZY,
 			cascade = CascadeType.ALL)
-	@OrderColumn(name = "opt_idx")          // extra INT column
+	@OrderColumn(name = "opt_idx")          
 	private List<Option> options = new ArrayList<>();
 
-	/* -------------------------------------------------- */
 	public PrintingRequest() { }
 
-	/* ================= setters ======================== */
 
 	public void setDescription(String description) {
 		this.description = description;
@@ -77,7 +74,6 @@ public class PrintingRequest {
 		this.note = note;
 	}
 
-	/* ================= getters ======================== */
 
 	public UUID getId() {
 		return id;
@@ -95,33 +91,15 @@ public class PrintingRequest {
 		return note;
 	}
 
-	/**
-	 * Retourne le total des prix de toutes les options de cette demande.
-	 */
-	/*public BigDecimal getOptions() {
-        BigDecimal total = BigDecimal.ZERO;
-        for (Option o : options) {
-            if (o.getPrice() != null) {
-                total = total.add(o.getPrice());
-            }
-        }
-        return total;
-    }*/
 	public List<Option> getOptions() {
 		return options;
 	}
 
-	/* ================= helpers ======================== */
-
-	/**
-	 * Ajoute une option en maintenant la cohérence bidirectionnelle.
-	 */
 	public void addOption(Option option) {
 		option.setPrintingRequest(this);
 		options.add(option);
 	}
 
-	/* alias utilisé ailleurs dans le code */
 	public void add(Option option) {
 		addOption(option);
 	}
