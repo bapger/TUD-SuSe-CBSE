@@ -272,6 +272,7 @@ public class OrderBean implements IOrderMgmt {
         /* les autres PersistenceException sont propagées telles quelles */
     }
     
+    @Override
     public void updateStatus(UUID orderId, String status) {
         Order order = em.find(Order.class, orderId);
         if (order == null)

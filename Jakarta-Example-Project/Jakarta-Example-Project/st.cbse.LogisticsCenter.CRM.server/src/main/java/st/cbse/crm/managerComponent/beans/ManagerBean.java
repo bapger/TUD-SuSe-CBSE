@@ -10,7 +10,7 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
+import jakarta.ws.rs.NotAllowedException;
 import st.cbse.crm.dto.OrderDTO;
 import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.managerComponent.data.Manager;
@@ -29,7 +29,6 @@ public class ManagerBean implements IManagerMgmt {
     @EJB
     private IProcessMgmt processService;
 
-    // Initiate a manager in the database when the server starts
     @PostConstruct
     public void initManager() {
         if (em.find(Manager.class, "admin") == null) {
@@ -46,7 +45,7 @@ public class ManagerBean implements IManagerMgmt {
                     String.class)
                     .setParameter("mail", email)
                     .setParameter("pwd", password)
-                    .getSingleResult(); // retourne directement la PK String
+                    .getSingleResult();
         } catch (NoResultException ex) {
             throw new NoResultException();
         }
@@ -56,7 +55,9 @@ public class ManagerBean implements IManagerMgmt {
     public List<UUID> sendPrintToProd(UUID orderId) {
         try {
             OrderDTO orderDTO = orderService.getOrderDTO(orderId);
-
+            if(orderDTO.getStatus().toString()=="IN_PROD") {
+            	throw new NotAllowedException("Order already in production");
+            }
             List<UUID> processIds = new ArrayList<UUID>();
 
             for (PrintRequestDTO printRequestDTO : orderDTO.getPrintingRequests()) {
@@ -69,7 +70,7 @@ public class ManagerBean implements IManagerMgmt {
 
             System.out.println("Order " + orderId +
                     " fully sent to production. Total processes created: " + processIds.size());
-
+            orderService.updateStatus(orderId, "IN_PROD");
             return processIds;
 
         } catch (NoResultException ex) {

@@ -303,7 +303,6 @@ public class ProductionBean implements IProductionMgmt {
 	    ProcessDTO processDTO = processMgmt.getProcess(transport.getProcessId());
 	    if (processDTO != null && "PAUSED".equals(processDTO.getStatus())) {
 	        LOG.info("Process " + transport.getProcessId() + " is paused - transport continues to destination");
-	        // Le transport continue même si le process est en pause
 	    }
 
 	    LOG.info("Processing transport delivery for item " + transport.getItemId());

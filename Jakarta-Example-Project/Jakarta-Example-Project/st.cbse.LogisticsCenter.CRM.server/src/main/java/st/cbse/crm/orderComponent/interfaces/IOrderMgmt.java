@@ -32,6 +32,7 @@ public interface IOrderMgmt {
 
 	void addNoteToPrintRequest(UUID requestId, String note);
 
+	void updateStatus(UUID orderId, String status);
 
 	List<OrderDTO> fetchAllOrderDTOs();
 
