@@ -271,6 +271,14 @@ public class OrderBean implements IOrderMgmt {
         }
         /* les autres PersistenceException sont propagées telles quelles */
     }
+    
+    public void updateStatus(UUID orderId, String status) {
+        Order order = em.find(Order.class, orderId);
+        if (order == null)
+            throw new IllegalArgumentException("Order not found: " + orderId);
+        order.setOrderStatus(OrderStatus.valueOf(status.toUpperCase(Locale.ROOT)));
+        	
+    }
 
 
 

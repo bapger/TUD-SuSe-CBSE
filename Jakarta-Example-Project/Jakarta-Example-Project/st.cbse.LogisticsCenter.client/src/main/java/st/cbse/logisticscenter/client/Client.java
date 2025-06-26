@@ -15,6 +15,7 @@ import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.dto.ShipmentItemDTO;
 import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
 import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
+import st.cbse.crm.orderComponent.data.OrderStatus;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
 
@@ -440,9 +441,11 @@ public class Client {
 		listOrdersWithNumbers();
 		OrderDTO selectedOrder = selectOrder("Select order to send to production:");
 
-		if (selectedOrder != null) {
+		if (selectedOrder != null && selectedOrder.getStatus() == OrderStatus.COMPLETED.toString()) {
 			managerMgmt.sendPrintToProd(selectedOrder.getId());
 			System.out.println("Order sent to production.");
+		}else{
+			System.out.println("order not completed");
 		}
 	}
 
