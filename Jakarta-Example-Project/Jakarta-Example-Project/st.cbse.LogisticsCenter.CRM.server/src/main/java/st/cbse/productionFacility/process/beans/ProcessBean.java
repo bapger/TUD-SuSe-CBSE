@@ -1,11 +1,17 @@
 package st.cbse.productionFacility.process.beans;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import jakarta.annotation.Resource;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
+import jakarta.ejb.Timeout;
+import jakarta.ejb.Timer;
+import jakarta.ejb.TimerConfig;
+import jakarta.ejb.TimerService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -17,6 +23,7 @@ import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.process.dto.ProcessMapper;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
+import st.cbse.productionFacility.production.interfaces.IProductionMgmt;
 import st.cbse.productionFacility.production.machine.dto.MachineDTO;
 import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
 
@@ -30,6 +37,12 @@ public class ProcessBean implements IProcessMgmt {
     
     @EJB
     private IMachineMgmt machineMgmt;
+    
+    @EJB
+    private IProductionMgmt productionMgmt;
+    
+    @Resource
+    private TimerService timerService;
     
     @Override
     public UUID createProcessFromPrintRequest(PrintRequestDTO printRequest) {
@@ -119,13 +132,11 @@ public class ProcessBean implements IProcessMgmt {
                 
                 LOG.info("Process " + process.getId() + " started with machine " + machineDTO.getId());
                 
-                // Programmer et exécuter la machine
                 if (machineMgmt.programMachine(machineDTO.getId())) {
                     LOG.info("Machine " + machineDTO.getId() + " programmed successfully");
                     
-                    // NOUVEAU : Exécuter la machine immédiatement
                     LOG.info("Executing machine " + machineDTO.getId() + " for process " + process.getId());
-                    boolean executed = machineMgmt.executeMachine(machineDTO.getId());
+                    boolean executed = machineMgmt.executeMachine(machineDTO.getId(), process.getId());
                     
                     if (executed) {
                         LOG.info("Machine " + machineDTO.getId() + " executed successfully!");
@@ -152,36 +163,112 @@ public class ProcessBean implements IProcessMgmt {
         }
     }
 
-    // Nouvelle méthode pour traiter l'étape suivante
     private void tryToProcessNextStep(Process process, ProcessStep nextStep) {
         LOG.info("Attempting to process next step: " + nextStep.getStepType() + " for process " + process.getId());
         
-        String machineType = mapStepToMachineType(nextStep.getStepType());
-        List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
+        // Récupérer l'étape précédente pour savoir d'où vient l'item
+        ProcessStep previousStep = getPreviousCompletedStep(process, nextStep);
         
-        if (!availableMachines.isEmpty()) {
-            MachineDTO machineDTO = availableMachines.get(0);
+        if (previousStep != null && previousStep.getAssignedMachineId() != null) {
+            LOG.info("Previous step found: " + previousStep.getStepType() + 
+                    " with machine " + previousStep.getAssignedMachineId());
             
-            if (machineMgmt.reserveMachine(machineDTO.getId(), process.getId())) {
-                nextStep.setAssignedMachineId(machineDTO.getId());
-                em.merge(process);
+            // Vérifier d'abord si l'item est prêt dans l'output via le DTO
+            MachineDTO fromMachineDTO = machineMgmt.getMachineDTO(previousStep.getAssignedMachineId());
+            
+            if (fromMachineDTO == null) {
+                LOG.warning("Cannot get DTO for machine " + previousStep.getAssignedMachineId() + " - machine might not exist");
+                return;
+            }
+            
+            // Ajouter des logs détaillés sur l'état de la machine
+            LOG.info("Machine " + fromMachineDTO.getId() + " state: " +
+                    " Status=" + fromMachineDTO.getStatus() + 
+                    ", OutputProcessId=" + fromMachineDTO.getOutputProcessId() + 
+                    ", ActiveProcessId=" + fromMachineDTO.getActiveProcessId() +
+                    ", InputProcessId=" + fromMachineDTO.getInputProcessId() +
+                    ", HasOutput=" + fromMachineDTO.isHasOutput() +
+                    ", HasInput=" + fromMachineDTO.isHasInput());
+            
+            if (fromMachineDTO.getOutputProcessId() == null) {
+                LOG.info("Item not yet ready in output of machine " + previousStep.getAssignedMachineId() + 
+                        " - scheduling retry in 2 seconds");
                 
-                if (machineMgmt.programMachine(machineDTO.getId())) {
-                    boolean executed = machineMgmt.executeMachine(machineDTO.getId());
+                // Réessayer dans 2 secondes
+                timerService.createSingleActionTimer(2000, new TimerConfig(
+                    new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
+                return;
+            }
+            
+            LOG.info("Output is ready - proceeding with transport setup");
+            
+            // Il y a une étape précédente, donc besoin de transport
+            String machineType = mapStepToMachineType(nextStep.getStepType());
+            LOG.info("Looking for available machines of type: " + machineType);
+            
+            List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
+            LOG.info("Found " + availableMachines.size() + " available machines of type " + machineType);
+            
+            if (!availableMachines.isEmpty()) {
+                MachineDTO targetMachine = availableMachines.get(0);
+                LOG.info("Target machine found: " + targetMachine.getId() + " (Type: " + targetMachine.getType() + 
+                        ", Status: " + targetMachine.getStatus() + ")");
+                
+                // Réserver la machine cible
+                LOG.info("Attempting to reserve machine " + targetMachine.getId());
+                if (machineMgmt.reserveMachine(targetMachine.getId(), process.getId())) {
+                    LOG.info("Target machine reserved successfully");
                     
-                    if (executed) {
-                        LOG.info("Step " + nextStep.getStepType() + " executed successfully");
+                    // Assigner la machine à l'étape
+                    nextStep.setAssignedMachineId(targetMachine.getId());
+                    em.merge(process);
+                    LOG.info("Assigned machine " + targetMachine.getId() + " to step " + nextStep.getStepType());
+                    
+                    // Initier le transport
+                    LOG.info("Initiating transport from machine " + previousStep.getAssignedMachineId() + 
+                            " to machine " + targetMachine.getId());
+                    
+                    boolean transported = productionMgmt.transportItem(
+                        process.getId(),
+                        process.getId(),
+                        previousStep.getAssignedMachineId(),
+                        targetMachine.getId()
+                    );
+                    
+                    if (transported) {
+                        LOG.info("Transport initiated successfully");
+                        // Le reste sera géré par le timer de transport
+                    } else {
+                        LOG.warning("Transport failed - releasing machine reservation");
+                        LOG.warning("Check ProductionBean logs for transport failure details");
+                        machineMgmt.stopMachine(targetMachine.getId());
+                        nextStep.setAssignedMachineId(null);
+                        em.merge(process);
+                    
                         
-                        // Récursivement traiter l'étape suivante
-                        ProcessStep followingStep = process.getCurrentStep();
-                        if (followingStep != null && !followingStep.equals(nextStep)) {
-                            tryToProcessNextStep(process, followingStep);
-                        }
+                        // Réessayer dans 5 secondes
+                        LOG.info("Scheduling retry in 5 seconds");
+                        timerService.createSingleActionTimer(5000, new TimerConfig(
+                            new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
                     }
+                } else {
+                    LOG.warning("Failed to reserve target machine " + targetMachine.getId() + " - will retry");
+                    // Réessayer dans 5 secondes
+                    LOG.info("Scheduling retry in 5 seconds");
+                    timerService.createSingleActionTimer(5000, new TimerConfig(
+                        new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
                 }
+            } else {
+                LOG.info("No available machine for step " + nextStep.getStepType() + " - will retry");
+                // Réessayer dans 10 secondes
+                LOG.info("Scheduling retry in 10 seconds");
+                timerService.createSingleActionTimer(10000, new TimerConfig(
+                    new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
             }
         } else {
-            LOG.info("No available machine for step " + nextStep.getStepType() + " - process will wait");
+            // Première étape ou pas de machine précédente
+            LOG.info("No previous step - starting step directly");
+            tryToStartStep(process, nextStep);
         }
     }
     
@@ -192,13 +279,11 @@ public class ProcessBean implements IProcessMgmt {
     }
     
     private String mapStepToMachineType(String stepType) {
-        // Mapper les types d'étapes aux types de machines
-        // À adapter selon votre modèle de données
         switch (stepType.toUpperCase()) {
             case "PRINTING":
                 return "PrintingMachine";
             case "PAINT":
-                return "PaintingMachine";
+                return "PaintMachine";  // <-- Changer ici !
             case "SMOOTHING":
                 return "SmoothingMachine";
             case "ENGRAVING":
@@ -216,13 +301,13 @@ public class ProcessBean implements IProcessMgmt {
         LOG.fine("Mapping option type: " + optionType);
         
         switch (optionType) {
-            case "PaintJob":
+            case "PAINTJOB":
                 LOG.fine("Mapped to PAINT");
                 return "PAINT";
-            case "Smoothing":
+            case "SMOOTHING":
                 LOG.fine("Mapped to SMOOTHING");
                 return "SMOOTHING";
-            case "Engraving":
+            case "ENGRAVING":
                 LOG.fine("Mapped to ENGRAVING");
                 return "ENGRAVING";
             default:
@@ -310,18 +395,106 @@ public class ProcessBean implements IProcessMgmt {
         currentStep.setCompleted(true);
         LOG.info("Step " + currentStep.getStepType() + " marked as completed");
         
+        // Vérifier s'il y a une prochaine étape
         if (process.moveToNextStep()) {
             process.setStatus(ProcessStatus.IN_PROGRESS);
-            LOG.info("Moved to next step");
+            em.merge(process);
+            
+            // NE PAS traiter immédiatement la prochaine étape
+            // Planifier le traitement pour plus tard
+            scheduleNextStepProcessing(process.getId());
+            
         } else {
-            process.setStatus(ProcessStatus.COMPLETED);
-            LOG.info("All steps completed - Process finished!");
+            // Toutes les étapes sont terminées
+            LOG.info("All steps completed - scheduling delivery to storage");
+            scheduleStorageDelivery(process.getId(), currentStep.getAssignedMachineId());
         }
         
-        em.merge(process);
-        LOG.info("Process " + processId + " step " + currentStep.getStepType() + " completed");
-        
         return true;
+    }
+
+    // Nouvelle méthode pour planifier le traitement différé
+    private void scheduleNextStepProcessing(UUID processId) {
+        // Créer un timer pour traiter la prochaine étape dans 1 seconde
+        timerService.createSingleActionTimer(1000, new TimerConfig(
+            new ProcessingTask(processId, ProcessingTask.Type.NEXT_STEP), false));
+    }
+
+    private void scheduleStorageDelivery(UUID processId, UUID lastMachineId) {
+        timerService.createSingleActionTimer(1000, new TimerConfig(
+            new ProcessingTask(processId, lastMachineId, ProcessingTask.Type.STORAGE_DELIVERY), false));
+    }
+
+    @Timeout
+    public void handleProcessingTimer(Timer timer) {
+        ProcessingTask task = (ProcessingTask) timer.getInfo();
+        if (task == null) return;
+        
+        Process process = em.find(Process.class, task.getProcessId());
+        if (process == null) return;
+        
+        switch (task.getType()) {
+            case NEXT_STEP:
+                ProcessStep nextStep = process.getCurrentStep();
+                if (nextStep != null) {
+                    tryToProcessNextStep(process, nextStep);
+                }
+                break;
+                
+            case STORAGE_DELIVERY:
+                boolean delivered = productionMgmt.deliverToStorage(
+                    task.getProcessId(),
+                    task.getProcessId(),
+                    task.getMachineId()
+                );
+                
+                if (delivered) {
+                    process.setStatus(ProcessStatus.COMPLETED);
+                    em.merge(process);
+                    LOG.info("Process " + task.getProcessId() + " completed and delivered to storage!");
+                }
+                break;
+        }
+    }
+
+    // Classe interne pour les tâches
+    private static class ProcessingTask implements Serializable {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		enum Type { NEXT_STEP, STORAGE_DELIVERY }
+        
+        private final UUID processId;
+        private final UUID machineId;
+        private final Type type;
+        
+        ProcessingTask(UUID processId, Type type) {
+            this.processId = processId;
+            this.machineId = null;
+            this.type = type;
+        }
+        
+        ProcessingTask(UUID processId, UUID machineId, Type type) {
+            this.processId = processId;
+            this.machineId = machineId;
+            this.type = type;
+        }
+
+		public UUID getProcessId() {
+			return processId;
+		}
+
+		public UUID getMachineId() {
+			return machineId;
+		}
+
+		public Type getType() {
+			return type;
+		}
+        
+        
     }
     
     @Override
@@ -353,5 +526,38 @@ public class ProcessBean implements IProcessMgmt {
         boolean complete = process != null && process.getStatus() == ProcessStatus.COMPLETED;
         LOG.info("Process " + processId + " complete: " + complete);
         return complete;
+    }
+    
+    private ProcessStep getPreviousCompletedStep(Process process, ProcessStep currentStep) {
+        List<ProcessStep> steps = process.getSteps();
+        int currentIndex = steps.indexOf(currentStep);
+        
+        if (currentIndex > 0) {
+            for (int i = currentIndex - 1; i >= 0; i--) {
+                ProcessStep step = steps.get(i);
+                if (step.isCompleted() && step.getAssignedMachineId() != null) {
+                    return step;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void tryToStartStep(Process process, ProcessStep step) {
+        String machineType = mapStepToMachineType(step.getStepType());
+        List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
+        
+        if (!availableMachines.isEmpty()) {
+            MachineDTO machineDTO = availableMachines.get(0);
+            
+            if (machineMgmt.reserveMachine(machineDTO.getId(), process.getId())) {
+                step.setAssignedMachineId(machineDTO.getId());
+                em.merge(process);
+                
+                if (machineMgmt.programMachine(machineDTO.getId())) {
+                	machineMgmt.executeMachine(machineDTO.getId(), process.getId());;
+                }
+            }
+        }
     }
 }
