@@ -48,7 +48,7 @@ public class OrderDTO implements Serializable {
 
         return new OrderDTO(o.getId(),
                             o.getOrderStatus().name(),
-                            o.getCustomer().getName(),
+                            o.getCustomerId().toString(),
                             o.getCreationDate(),
                             o.getTotal(),
                             reqDtos);

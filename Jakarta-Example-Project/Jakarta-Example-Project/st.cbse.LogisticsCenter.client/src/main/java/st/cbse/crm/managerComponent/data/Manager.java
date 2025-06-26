@@ -1,6 +1,5 @@
 package st.cbse.crm.managerComponent.data;
 
-
 public class Manager {
     private String email;
     private String password;

@@ -1,55 +1,55 @@
 package st.cbse.crm.orderComponent.data;
 
-import st.cbse.crm.customerComponent.data.Customer;
-import st.cbse.crm.orderComponent.data.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+
 public class Order {
-	private UUID id = UUID.randomUUID();
 
-	private Customer customer;
 
-	private List<PrintingRequest> printingRequests = new ArrayList<>();
+    private UUID id = UUID.randomUUID();
 
-	private Invoice invoice;
+    private UUID customerId;
 
-	private OrderStatus orderStatus;
+    private List<PrintingRequest> printingRequests = new ArrayList<>();
 
-	private BigDecimal basePrice = BigDecimal.ZERO;
-	private BigDecimal total     = BigDecimal.ZERO;
+    private Invoice invoice;
 
-	private LocalDateTime creationDate;
-	private boolean      paid;
 
-	/* ================= getters / setters ================= */
+    private OrderStatus orderStatus;
 
-	public UUID getId()                               { return id; }
+    private BigDecimal basePrice = BigDecimal.ZERO;
+    private BigDecimal total     = BigDecimal.ZERO;
 
-	public Customer getCustomer()                     { return customer; }
-	public void setCustomer(Customer customer)        { this.customer = customer; }
+    private LocalDateTime creationDate;
+    private boolean      paid;
 
-	public OrderStatus getOrderStatus()               { return orderStatus; }
-	public void setOrderStatus(OrderStatus status)    { this.orderStatus = status; }
+    public UUID getId()                         { return id; }
 
-	public BigDecimal getBasePrice()                  { return basePrice; }
-	public void setBasePrice(BigDecimal basePrice)    { this.basePrice = basePrice; }
+    public UUID getCustomerId()                 { return customerId; }
+    public void setCustomerId(UUID customerId)  { this.customerId = customerId; }
 
-	public BigDecimal getTotal()                      { return total; }
-	public void setTotal(BigDecimal total)            { this.total = total; }
+    public OrderStatus getOrderStatus()               { return orderStatus; }
+    public void setOrderStatus(OrderStatus status)    { this.orderStatus = status; }
 
-	public LocalDateTime getCreationDate()            { return creationDate; }
-	public void setCreationDate(LocalDateTime date)   { this.creationDate = date; }
+    public BigDecimal getBasePrice()                  { return basePrice; }
+    public void setBasePrice(BigDecimal basePrice)    { this.basePrice = basePrice; }
 
-	public boolean isPaid()                           { return paid; }
-	public void setPaid(boolean paid)                 { this.paid = paid; }
+    public BigDecimal getTotal()                      { return total; }
+    public void setTotal(BigDecimal total)            { this.total = total; }
 
-	public List<PrintingRequest> getPrintingRequests(){ return printingRequests; }
-	public void setPrintingRequests(List<PrintingRequest> pr)
-	                                                 { this.printingRequests = pr; }
+    public LocalDateTime getCreationDate()            { return creationDate; }
+    public void setCreationDate(LocalDateTime date)   { this.creationDate = date; }
 
-	public Invoice getInvoice()                       { return invoice; }
-	public void setInvoice(Invoice invoice)           { this.invoice = invoice; }
+    public boolean isPaid()                           { return paid; }
+    public void setPaid(boolean paid)                 { this.paid = paid; }
+
+    public List<PrintingRequest> getPrintingRequests(){ return printingRequests; }
+    public void setPrintingRequests(List<PrintingRequest> pr)
+                                                     { this.printingRequests = pr; }
+
+    public Invoice getInvoice()                       { return invoice; }
+    public void setInvoice(Invoice invoice)           { this.invoice = invoice; }
 }

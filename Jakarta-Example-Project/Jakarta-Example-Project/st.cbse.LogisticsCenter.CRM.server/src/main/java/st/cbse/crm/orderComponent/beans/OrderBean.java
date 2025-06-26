@@ -2,7 +2,7 @@ package st.cbse.crm.orderComponent.beans;
 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
-import st.cbse.crm.customerComponent.data.Customer;
+
 import st.cbse.crm.dto.OrderDTO;
 import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.orderComponent.data.*;
@@ -21,12 +21,25 @@ public class OrderBean implements IOrderMgmt {
 
     @Override
     public UUID createOrder(UUID customerId, BigDecimal basePrice) {
-        Customer customer = em.find(Customer.class, customerId);
-        if (customer == null)
-            throw new IllegalArgumentException("Customer not found: " + customerId);
+    	if (customerId == null)
+            throw new IllegalArgumentException("Customer ID cannot be null");
+
+        // -----------------------------------------------------------------
+        // 1) Vérifier l’existence sans importer la classe Customer
+        // -----------------------------------------------------------------
+        Long nb = em.createQuery(
+                     "SELECT COUNT(c) FROM Customer c WHERE c.id = :cid",
+                     Long.class)
+                   .setParameter("cid", customerId)
+                   .getSingleResult();
+
+        if (nb == 0) {                       // aucun client → 404
+            throw new IllegalArgumentException(
+                  "Customer not found: " + customerId);
+        }
 
         Order order = new Order();
-        order.setCustomer(customer);
+        order.setCustomerId(customerId);
         order.setBasePrice(basePrice);
         order.setTotal(basePrice);
         order.setCreationDate(LocalDateTime.now());
@@ -135,7 +148,7 @@ public class OrderBean implements IOrderMgmt {
         List<Order> orders = em.createQuery(
                 "SELECT DISTINCT o " +
                 "FROM   Order o " +
-                "WHERE  o.customer.id = :cid " +
+                "WHERE  o.customerId = :cid " +
                 "ORDER  BY o.creationDate DESC", Order.class)
             .setParameter("cid", customerId)
             .setHint("jakarta.persistence.fetchgraph", g)
