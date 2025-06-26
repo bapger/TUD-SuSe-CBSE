@@ -20,6 +20,7 @@ import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
 import st.cbse.crm.orderComponent.data.OrderStatus;
 import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
+import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
 import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
 
@@ -30,6 +31,7 @@ public class Client {
 	private static IManagerMgmt managerMgmt;
 	private static IProductionManagerMgmt productionManagerMgmt;
 	private static IOrderMgmt orderMgmt;
+	private static IProcessMgmt processMgmt;
 	private static IShipmentMgmt shipmentMgmt;
 
 	/* --- Session state --------------------------------------------------- */
@@ -53,11 +55,12 @@ public class Client {
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.customerComponent.interfaces.ICustomerMgmt");
 			managerMgmt = (IManagerMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/ManagerBean!st.cbse.crm.managerComponent.interfaces.IManagerMgmt");
-			// need testing
 			productionManagerMgmt = (IProductionManagerMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/ProductionManagerBean!st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt");
 			orderMgmt = (IOrderMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.orderComponent.interfaces.IOrderMgmt");
+			processMgmt = (IProcessMgmt) ctx.lookup(
+					"ejb:/st.cbse.LogisticsCenter.CRM.server/ProcessBean!st.cbse.productionFacility.process.interfaces.IProcessMgmt");
 			shipmentMgmt = (IShipmentMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt");
 
@@ -207,7 +210,8 @@ public class Client {
 			System.out.println("\nProduction manager menu");
 			System.out.println("1  List processes");
 			System.out.println("2  Get processes by status");
-			System.out.println("3  Logout");
+			System.out.println("3  Pause a process");
+			System.out.println("4  Logout");
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
@@ -215,16 +219,28 @@ public class Client {
 					listProcesses();
 					return true;
 				case "2":
-
 					ProcessStatus[] status = ProcessStatus.values();
 					for (int i = 1; i < status.length + 1; i++) {
 						System.out.println(i + " : " + status[i - 1]);
 					}
-					String chosenStatus = status[Integer.parseInt(in.nextLine) - 1];
+					int choiceIndex = Integer.parseInt(in.nextLine());
+					ProcessStatus chosenStatus = status[choiceIndex - 1];
 					System.out.println("You chose : " + chosenStatus);
-					// getProcessesByStatus(chosenStatus);
+					getProcessesByStatus(chosenStatus);
 					return true;
 				case "3":
+					List<ProcessDTO> processes = productionManagerMgmt.getAllProcesses();
+
+					for (int i = 1; i < processes.size() + 1; i++) {
+						System.out.println(i + " : " + processes.get(i - 1));
+					}
+					System.out.println("Choose process to stop");
+					ProcessDTO chosenProcess = processes.get(Integer.parseInt(in.nextLine()) - 1);
+
+					System.out.println("You have chosen : " + chosenProcess);
+					stopProcess(chosenProcess);
+					return true;
+				case "4":
 					loggedProductionManager = null;
 					clearCache();
 					return true;
@@ -609,6 +625,14 @@ public class Client {
 			System.out.printf("ID = nique  Status = %s  Progress= %s",
 					p.getStatus(), p.getProgressPercentage());
 		}
+	}
+
+	private static List<ProcessDTO> getProcessesByStatus(ProcessStatus status) {
+		return processMgmt.getProcessesByStatus(status.name());
+	}
+
+	private static void stopProcess(ProcessDTO process) {
+		processMgmt.cancelProcess(process.getId());
 	}
 	/* ===================================================================== */
 	/* JNDI context helper */
