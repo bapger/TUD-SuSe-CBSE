@@ -29,9 +29,9 @@ public class ProductionManagerBean implements IProductionManagerMgmt {
 
     // Initiate a production manager in the database when the server starts
     @PostConstruct
-    public void initManager() {
-        if (em.find(Manager.class, "prodManager") == null) {
-            em.persist(new Manager("prodManager", "prodManager"));
+    public void initProductionManager() {
+        if (em.find(ProductionManager.class, "prodManager") == null) {
+            em.persist(new ProductionManager("prodManager", "prodManager"));
         }
     }
 
