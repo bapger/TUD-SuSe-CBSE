@@ -20,6 +20,8 @@ import st.cbse.productionFacility.production.machine.data.Machine;
 import st.cbse.productionFacility.production.machine.data.MachineStatus;
 import st.cbse.productionFacility.production.machine.dto.MachineDTO;
 import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
+import st.cbse.productionFacility.storage.interfaces.IStorageMgmt;
+import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 
 @Stateless
@@ -33,6 +35,9 @@ public class MachineBean implements IMachineMgmt {
 	@EJB
 	private IProcessMgmt processMgmt;
 
+	@EJB
+	private IStorageMgmt storageMgmt;
+	
 	@Resource
 	private TimerService timerService;
 
@@ -49,7 +54,81 @@ public class MachineBean implements IMachineMgmt {
 	}
 
 	@Override
+	public boolean pauseMachine(UUID machineId) {
+	    LOG.info("Pausing machine: " + machineId);
+	    Machine machine = em.find(Machine.class, machineId);
+	    
+	    if (machine == null) {
+	        LOG.warning("Machine not found: " + machineId);
+	        return false;
+	    }
+	    
+	    // Si la machine est active, la mettre en pause
+	    if (machine.getStatus() == MachineStatus.ACTIVE) {
+	        machine.setStatus(MachineStatus.PAUSED);
+	        em.merge(machine);
+	        LOG.info("Machine " + machineId + " paused while active");
+	    } else if (machine.getStatus() == MachineStatus.RESERVED) {
+	        // Si réservée, juste noter qu'elle doit être pausée
+	        machine.setStatus(MachineStatus.PAUSED);
+	        em.merge(machine);
+	        LOG.info("Machine " + machineId + " marked as paused (was reserved)");
+	    }
+	    
+	    return true;
+	}
+
+	@Override
+	public boolean resumeMachine(UUID machineId, UUID processId) {
+	    LOG.info("Resuming machine: " + machineId + " for process: " + processId);
+	    Machine machine = em.find(Machine.class, machineId);
+	    
+	    if (machine == null) {
+	        LOG.warning("Machine not found: " + machineId);
+	        return false;
+	    }
+	    
+	    if (machine.getStatus() != MachineStatus.PAUSED) {
+	        LOG.warning("Machine not paused: " + machineId);
+	        return false;
+	    }
+	    
+	    // Si elle avait un processus actif, reprendre
+	    if (machine.getActiveProcessId() != null) {
+	        machine.setStatus(MachineStatus.ACTIVE);
+	        // Relancer le timer pour finir le traitement
+	        long remainingTime = machine.getProcessingTimeMillis() / 2; // Approximation
+	        timerService.createSingleActionTimer(remainingTime, new TimerConfig(
+	            new MachineCompletionInfo(machine.getActiveProcessId(), machineId), false));
+	    } else {
+	        machine.setStatus(MachineStatus.RESERVED);
+	    }
+	    
+	    em.merge(machine);
+	    LOG.info("Machine " + machineId + " resumed");
+	    return true;
+	}
+
+	@Override
+	public boolean isMachinePausedForProcess(UUID machineId, UUID processId) {
+	    Machine machine = em.find(Machine.class, machineId);
+	    return machine != null && machine.getStatus() == MachineStatus.PAUSED &&
+	           (machine.getActiveProcessId() != null && machine.getActiveProcessId().equals(processId));
+	}
+	
+	@Override
 	public boolean executeMachine(UUID machineId, UUID processId) {
+	    ProcessDTO processDTO = processMgmt.getProcess(processId);
+	    if (processDTO != null && "PAUSED".equals(processDTO.getStatus())) {
+	        LOG.warning("Cannot execute machine for paused process: " + processId);
+	        Machine machine = em.find(Machine.class, machineId);
+	        if (machine != null) {
+	            machine.setStatus(MachineStatus.PAUSED);
+	            em.merge(machine);
+	        }
+	        return false;
+	    }
+
 	    Machine machine = em.find(Machine.class, machineId);
 	    if (machine == null || machine.getStatus() != MachineStatus.RESERVED) {
 	        LOG.warning("Cannot execute machine " + machineId + " - machine null or not reserved");
@@ -59,12 +138,22 @@ public class MachineBean implements IMachineMgmt {
 	    LOG.info("Machine " + machineId + " before processing - outputProcessId: " + machine.getOutputProcessId());
 	    LOG.info("Machine " + machineId + " starting processing - hasOutput: " + machine.hasOutput());
 	    
-	    // Pour les machines sans input, définir directement l'activeProcessId
+	    if (machine.getClass().getSimpleName().equals("PrintingMachine")) {
+	        LOG.info("PrintingMachine detected - creating UnfinishedProduct");
+	        if (processDTO != null) {
+	            UUID itemId = storageMgmt.createUnfinishedProduct(
+	                processId,
+	                processDTO.getPrintRequestId(),
+	                "stl_path"
+	            );
+	            LOG.info("Created UnfinishedProduct with itemId: " + itemId + " for process: " + processId);
+	        }
+	    }
+	    
 	    if (!machine.hasInput()) {
 	        machine.setActiveProcessId(processId);
 	        machine.setStatus(MachineStatus.ACTIVE);
 	    } else {
-	        // Pour les machines avec input, utiliser la méthode normale
 	        boolean started = machine.startProcessing();
 	        if (!started) {
 	            LOG.warning("Failed to start processing on machine " + machineId);

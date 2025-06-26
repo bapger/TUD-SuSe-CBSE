@@ -166,6 +166,11 @@ public class ProcessBean implements IProcessMgmt {
     private void tryToProcessNextStep(Process process, ProcessStep nextStep) {
         LOG.info("Attempting to process next step: " + nextStep.getStepType() + " for process " + process.getId());
         
+        if (process.getStatus() == ProcessStatus.PAUSED) {
+            LOG.info("Process " + process.getId() + " is paused - skipping next step processing");
+            return;
+        }
+
         // Récupérer l'étape précédente pour savoir d'où vient l'item
         ProcessStep previousStep = getPreviousCompletedStep(process, nextStep);
         
@@ -378,6 +383,82 @@ public class ProcessBean implements IProcessMgmt {
         em.merge(process);
         LOG.info("Process " + processId + " cancelled");
         return true;
+    }
+    
+    @Override
+    public boolean pauseProcess(UUID processId) {
+        LOG.info("Pausing process: " + processId);
+        Process process = em.find(Process.class, processId);
+        
+        if (process == null) {
+            LOG.warning("Process not found: " + processId);
+            return false;
+        }
+        
+        if (process.getStatus() != ProcessStatus.IN_PROGRESS && 
+            process.getStatus() != ProcessStatus.QUEUED) {
+            LOG.warning("Cannot pause process in status: " + process.getStatus());
+            return false;
+        }
+        
+        // Sauvegarder l'ancien statut pour la reprise
+        ProcessStatus oldStatus = process.getStatus();
+        process.setStatus(ProcessStatus.PAUSED);
+        em.merge(process);
+        
+        // Arrêter toutes les machines actives pour ce process
+        for (ProcessStep step : process.getSteps()) {
+            if (step.getAssignedMachineId() != null && !step.isCompleted()) {
+                pauseMachineForProcess(step.getAssignedMachineId(), processId);
+            }
+        }
+        
+        LOG.info("Process " + processId + " paused successfully (was " + oldStatus + ")");
+        return true;
+    }
+
+    @Override
+    public boolean resumeProcess(UUID processId) {
+        LOG.info("Resuming process: " + processId);
+        Process process = em.find(Process.class, processId);
+        
+        if (process == null) {
+            LOG.warning("Process not found: " + processId);
+            return false;
+        }
+        
+        if (process.getStatus() != ProcessStatus.PAUSED) {
+            LOG.warning("Cannot resume process not in PAUSED status: " + process.getStatus());
+            return false;
+        }
+        
+        process.setStatus(ProcessStatus.IN_PROGRESS);
+        em.merge(process);
+        
+        // Reprendre le traitement là où il s'était arrêté
+        ProcessStep currentStep = process.getCurrentStep();
+        if (currentStep != null) {
+            if (currentStep.getAssignedMachineId() != null) {
+                // Si une machine était assignée, la reprendre
+                resumeMachineForProcess(currentStep.getAssignedMachineId(), processId);
+            } else {
+                // Sinon, essayer de traiter l'étape
+                scheduleNextStepProcessing(processId);
+            }
+        }
+        
+        LOG.info("Process " + processId + " resumed successfully");
+        return true;
+    }
+
+    // Méthode helper pour mettre en pause une machine
+    private void pauseMachineForProcess(UUID machineId, UUID processId) {
+        machineMgmt.pauseMachine(machineId);
+    }
+
+    // Méthode helper pour reprendre une machine
+    private void resumeMachineForProcess(UUID machineId, UUID processId) {
+        machineMgmt.resumeMachine(machineId, processId);
     }
     
     @Override

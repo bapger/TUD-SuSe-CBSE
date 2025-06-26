@@ -25,4 +25,7 @@ public interface IProcessMgmt {
     
     ProcessDTO getCurrentStepInfo(UUID processId);
     boolean isProcessComplete(UUID processId);
+    
+    boolean pauseProcess(UUID processId);
+    boolean resumeProcess(UUID processId);
 }

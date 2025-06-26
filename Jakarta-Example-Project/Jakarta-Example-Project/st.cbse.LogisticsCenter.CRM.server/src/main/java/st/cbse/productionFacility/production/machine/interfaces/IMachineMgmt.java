@@ -29,4 +29,8 @@ public interface IMachineMgmt {
     void notifyItemArrived(UUID machineId, UUID itemId);
 
     MachineDTO getMachineDTO(UUID machineId);
+    
+    boolean pauseMachine(UUID machineId);
+    boolean resumeMachine(UUID machineId, UUID processId);
+    boolean isMachinePausedForProcess(UUID machineId, UUID processId);
 }

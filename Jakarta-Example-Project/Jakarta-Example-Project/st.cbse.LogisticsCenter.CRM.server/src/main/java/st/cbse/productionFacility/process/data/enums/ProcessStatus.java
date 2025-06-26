@@ -4,6 +4,7 @@ public enum ProcessStatus {
     CREATED,
     QUEUED,
     IN_PROGRESS,
+    PAUSED,
     COMPLETED,
     FAILED,
     CANCELLED

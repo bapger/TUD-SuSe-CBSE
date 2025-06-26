@@ -28,7 +28,23 @@ public class UnfinishedProduct {
         this.itemData = itemData;
     }
     
-    public UUID getId() { return id; }
+    public void setId(UUID id) {
+		this.id = id;
+	}
+
+	public void setProcessId(UUID processId) {
+		this.processId = processId;
+	}
+
+	public void setPrintRequestId(UUID printRequestId) {
+		this.printRequestId = printRequestId;
+	}
+
+	public void setItemData(ItemData itemData) {
+		this.itemData = itemData;
+	}
+
+	public UUID getId() { return id; }
     public UUID getProcessId() { return processId; }
     public UUID getPrintRequestId() { return printRequestId; }
     public String getCurrentStepType() { return currentStepType; }

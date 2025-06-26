@@ -18,6 +18,7 @@ import st.cbse.productionFacility.production.interfaces.IProductionMgmt;
 import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
 import st.cbse.productionFacility.production.machine.data.Machine;
 import st.cbse.productionFacility.production.machine.data.MachineStatus;
+import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 import st.cbse.productionFacility.storage.interfaces.IStorageMgmt;
 import st.cbse.productionFacility.step.data.Step;
@@ -222,7 +223,7 @@ public class ProductionBean implements IProductionMgmt {
 
 		LOG.info("Transport entity created with ID: " + transport.getId() + " - Timer set for 3 seconds");
 
-		timerService.createSingleActionTimer(3000, new TimerConfig(transport.getId(), false));
+		timerService.createSingleActionTimer(5000, new TimerConfig(transport.getId(), false));
 
 		LOG.info("Transport initiated from machine " + fromMachineId + " to " + toMachineId);
 		return true;
@@ -298,6 +299,13 @@ public class ProductionBean implements IProductionMgmt {
 	        return;
 	    }
 
+	    // Vérifier si le process est en pause
+	    ProcessDTO processDTO = processMgmt.getProcess(transport.getProcessId());
+	    if (processDTO != null && "PAUSED".equals(processDTO.getStatus())) {
+	        LOG.info("Process " + transport.getProcessId() + " is paused - transport continues to destination");
+	        // Le transport continue même si le process est en pause
+	    }
+
 	    LOG.info("Processing transport delivery for item " + transport.getItemId());
 
 	    if (transport.getToMachineId() != null) {
@@ -308,8 +316,14 @@ public class ProductionBean implements IProductionMgmt {
 
 	        processMgmt.notifyStepCompleted(transport.getProcessId(), transport.getFromMachineId());
 
-	        if (machineMgmt.programMachine(transport.getToMachineId())) {
-	            machineMgmt.executeMachine(transport.getToMachineId(), transport.getProcessId());
+	        // Vérifier si le process est en pause avant de programmer la machine
+	        if (processDTO != null && !"PAUSED".equals(processDTO.getStatus())) {
+	            if (machineMgmt.programMachine(transport.getToMachineId())) {
+	                machineMgmt.executeMachine(transport.getToMachineId(), transport.getProcessId());
+	            }
+	        } else {
+	            LOG.info("Process is paused - machine " + transport.getToMachineId() + " will wait with item in input");
+	            // L'item reste dans l'input de la machine jusqu'à la reprise du process
 	        }
 
 	        LOG.info("Item " + transport.getItemId() + " delivered to " + toMachine.getMachineType());
@@ -317,7 +331,7 @@ public class ProductionBean implements IProductionMgmt {
 	        // Transport vers le storage
 	        LOG.info("Delivering to storage - Converting process " + transport.getProcessId() + " to finished product");
 	        
-	        // Convertir en produit fini
+	        // Le transport vers le storage continue même si le process est en pause
 	        boolean converted = storageMgmt.convertToFinished(transport.getProcessId());
 	        
 	        if (converted) {

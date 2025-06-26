@@ -73,6 +73,9 @@ public class StorageBean implements IStorageMgmt {
         ItemData item = unfinished.getItemData();
         item.setStatus(ItemData.ItemStatus.IN_STORAGE);
         
+        unfinished.setItemData(null);
+        em.merge(unfinished);
+        
         FinishedProducts finished = new FinishedProducts(
                 processId, 
                 unfinished.getPrintRequestId(), 

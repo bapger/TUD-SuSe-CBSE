@@ -7,7 +7,7 @@ import jakarta.persistence.Entity;
 @DiscriminatorValue("PACKAGING")
 public class PackagingMachine extends Machine {
     
-    private static final long PROCESSING_TIME = 1000;
+    private static final long PROCESSING_TIME = 30000;
     private static final String ACTION_MESSAGE = "Packaging";
     private static final String MACHINE_TYPE = "PACKAGING";
     
