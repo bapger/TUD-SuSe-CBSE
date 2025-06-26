@@ -12,40 +12,35 @@ public class PrintRequestDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final UUID            id;
-    private final UUID			  orderId;
-    private final String          stlPath;
-    private final String          note;
-    private final List<OptionDTO> options;
-    private final BigDecimal      price;      // ← new
+    private final UUID     			id;
+    private final UUID			  	orderId;
+    private final String          	stlPath;
+    private final String          	note;
+    private final List<OptionDTO> 	options;
+    private final BigDecimal      	price;
 
     public PrintRequestDTO(UUID id, UUID orderId, String stlPath, String note, List<OptionDTO> options) {
 
-        this.id       = id;
-        this.orderId  = orderId;
-        this.stlPath  = stlPath;
-        this.note     = note;
-        this.options  = List.copyOf(options);
-
-        // sum of all option prices
+        this.id			= id;
+        this.orderId	= orderId;
+        this.stlPath	= stlPath;
+        this.note		= note;
+        this.options	= List.copyOf(options);
         this.price = this.options.stream()
                                  .map(OptionDTO::getPrice)
                                  .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /* existing getters … */
-    public UUID getId()                 { return id; }
-    public String getStlPath()          { return stlPath; }
-    public String getNote()             { return note; }
+    public UUID getId()            		{ return id; }
+    public String getStlPath()         	{ return stlPath; }
+    public String getNote()            	{ return note; }
     public List<OptionDTO> getOptions() { return options; }
-
-    /* new getter */
     public BigDecimal getPrice()        { return price; }
     
     public static PrintRequestDTO of(PrintingRequest pr) {
         List<OptionDTO> optionDtos = pr.getOptions()
                                        .stream()
-                                       .map(OptionDTO::of)   // => assurez-vous que OptionDTO.of(Option) existe
+                                       .map(OptionDTO::of)
                                        .collect(Collectors.toList());
 
         return new PrintRequestDTO(pr.getId(),

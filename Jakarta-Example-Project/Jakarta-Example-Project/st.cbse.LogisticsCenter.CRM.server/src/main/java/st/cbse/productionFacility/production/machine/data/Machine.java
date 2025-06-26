@@ -32,8 +32,6 @@ public abstract class Machine {
 		this.hasOutput = hasOutput;
 	}
 
-	/* ----------- Getters/Setters ----------- */
-
 	public UUID getId() { return id; }
 
 	public UUID getInputProcessId() { return inputProcessId; }
@@ -83,9 +81,7 @@ public abstract class Machine {
 			return false;
 		}
 
-		// AJOUT : Vérifier que l'output est vide avant d'y placer le nouvel item
 		if (hasOutput && outputProcessId != null) {
-			// L'output est déjà plein, ne peut pas finir le traitement
 			return false;
 		}
 

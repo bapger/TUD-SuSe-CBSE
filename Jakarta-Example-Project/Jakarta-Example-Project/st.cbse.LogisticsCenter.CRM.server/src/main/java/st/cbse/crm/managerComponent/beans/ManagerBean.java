@@ -82,7 +82,6 @@ public class ManagerBean implements IManagerMgmt {
 
     @Override
     public List<OrderDTO> listAllOrders() {
-        /* Pas de logique métier ici : simple délégation */
         return orderService.fetchAllOrderDTOs();
     }
 

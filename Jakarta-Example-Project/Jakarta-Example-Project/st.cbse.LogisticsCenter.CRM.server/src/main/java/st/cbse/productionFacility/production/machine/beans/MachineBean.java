@@ -63,13 +63,11 @@ public class MachineBean implements IMachineMgmt {
 	        return false;
 	    }
 	    
-	    // Si la machine est active, la mettre en pause
 	    if (machine.getStatus() == MachineStatus.ACTIVE) {
 	        machine.setStatus(MachineStatus.PAUSED);
 	        em.merge(machine);
 	        LOG.info("Machine " + machineId + " paused while active");
 	    } else if (machine.getStatus() == MachineStatus.RESERVED) {
-	        // Si réservée, juste noter qu'elle doit être pausée
 	        machine.setStatus(MachineStatus.PAUSED);
 	        em.merge(machine);
 	        LOG.info("Machine " + machineId + " marked as paused (was reserved)");
@@ -93,11 +91,9 @@ public class MachineBean implements IMachineMgmt {
 	        return false;
 	    }
 	    
-	    // Si elle avait un processus actif, reprendre
 	    if (machine.getActiveProcessId() != null) {
 	        machine.setStatus(MachineStatus.ACTIVE);
-	        // Relancer le timer pour finir le traitement
-	        long remainingTime = machine.getProcessingTimeMillis() / 2; // Approximation
+	        long remainingTime = machine.getProcessingTimeMillis() / 2;
 	        timerService.createSingleActionTimer(remainingTime, new TimerConfig(
 	            new MachineCompletionInfo(machine.getActiveProcessId(), machineId), false));
 	    } else {
@@ -135,7 +131,6 @@ public class MachineBean implements IMachineMgmt {
 	        return false;
 	    }
 	    
-	    // AJOUT : Vérifier qu'aucun autre processus n'est actif
 	    if (machine.getActiveProcessId() != null) {
 	        LOG.warning("Machine " + machineId + " already has active process: " + machine.getActiveProcessId());
 	        return false;
@@ -145,7 +140,6 @@ public class MachineBean implements IMachineMgmt {
 	    
 	    UUID itemId = null;
 	    
-	    // Pour PrintingMachine, créer l'item et stocker l'ID
 	    if (machine.getClass().getSimpleName().equals("PrintingMachine")) {
 	        LOG.info("PrintingMachine detected - creating UnfinishedProduct");
 	        if (processDTO != null) {
@@ -158,7 +152,6 @@ public class MachineBean implements IMachineMgmt {
 	        }
 	    }
 	    
-	    // Démarrer le traitement
 	    if (!machine.hasInput()) {
 	        machine.setActiveProcessId(processId);
 	        machine.setStatus(MachineStatus.ACTIVE);
@@ -171,11 +164,10 @@ public class MachineBean implements IMachineMgmt {
 	    }
 	    
 	    em.merge(machine);
-	    em.flush(); // S'assurer que les changements sont persistés
+	    em.flush();
 	    
 	    LOG.info("Machine " + machineId + " processing - " + machine.getActionMessage());
 	    
-	    // Simuler le temps de traitement
 	    try {
 	        Thread.sleep(machine.getProcessingTimeMillis());
 	    } catch (InterruptedException e) {
@@ -184,25 +176,22 @@ public class MachineBean implements IMachineMgmt {
 	        return false;
 	    }
 	    
-	    // Finir le traitement
 	    boolean finished = machine.finishProcessing();
 	    if (!finished) {
 	        LOG.warning("Failed to finish processing on machine " + machineId);
 	        return false;
 	    }
 	    
-	    // MODIFICATION : Pour les machines qui créent des items, stocker l'itemId dans outputProcessId
 	    if (itemId != null) {
 	        machine.setOutputProcessId(itemId);
 	        LOG.info("Set outputProcessId to itemId: " + itemId);
 	    }
 	    
 	    em.merge(machine);
-	    em.flush(); // Forcer la persistance avant la notification
+	    em.flush();
 	    
 	    LOG.info("Machine " + machineId + " completed - outputProcessId: " + machine.getOutputProcessId());
 	    
-	    // Notifier après un court délai pour s'assurer de la persistance
 	    if (machine.getActiveProcessId() == null && processId != null && processMgmt != null) {
 	        timerService.createSingleActionTimer(500, new TimerConfig(
 	            new MachineCompletionInfo(processId, machineId), false));
@@ -211,7 +200,6 @@ public class MachineBean implements IMachineMgmt {
 	    return true;
 	}
 
-	// Ajouter cette méthode timeout dans MachineBean
 	@Timeout
 	public void handleMachineCompletion(Timer timer) {
 		MachineCompletionInfo info = (MachineCompletionInfo) timer.getInfo();
@@ -222,7 +210,6 @@ public class MachineBean implements IMachineMgmt {
 		}
 	}
 
-	// Classe interne pour stocker les infos
 	private static class MachineCompletionInfo implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final UUID processId;
@@ -246,7 +233,7 @@ public class MachineBean implements IMachineMgmt {
 	public List<Machine> findAvailableMachinesByType(String machineType) {
 	    return em.createQuery(
 	            "SELECT m FROM Machine m WHERE m.status = :status " +
-	            "AND m.outputProcessId IS NULL " +  // AJOUT : output doit être vide
+	            "AND m.outputProcessId IS NULL " +
 	            "AND TYPE(m) = :type", 
 	            Machine.class)
 	            .setParameter("status", MachineStatus.AVAILABLE)
@@ -269,13 +256,11 @@ public class MachineBean implements IMachineMgmt {
 	        return false;
 	    }
 	    
-	    // AJOUT : Vérifier qu'il n'y a pas de processus actif ou en attente
 	    if (machine.getActiveProcessId() != null || machine.getInputProcessId() != null) {
 	        LOG.warning("Machine " + machineId + " has pending work - cannot reserve");
 	        return false;
 	    }
 	    
-	    // AJOUT : Vérifier que l'output est vide
 	    if (machine.getOutputProcessId() != null) {
 	        LOG.warning("Machine " + machineId + " has item in output - cannot reserve until output is cleared");
 	        return false;
@@ -380,15 +365,13 @@ public class MachineBean implements IMachineMgmt {
 
 	@Override
 	public List<MachineDTO> findAvailableMachineDTOsByType(String machineType) {
-	    // Récupérer toutes les machines disponibles avec output vide
 	    List<Machine> allAvailableMachines = em.createQuery(
 	            "SELECT m FROM Machine m WHERE m.status = :status " +
-	            "AND m.outputProcessId IS NULL", // AJOUT : output doit être vide
+	            "AND m.outputProcessId IS NULL",
 	            Machine.class)
 	            .setParameter("status", MachineStatus.AVAILABLE)
 	            .getResultList();
 
-	    // Filtrer par type de classe en Java
 	    return allAvailableMachines.stream()
 	            .filter(machine -> machine.getClass().getSimpleName().equals(machineType))
 	            .map(this::convertToDTO)

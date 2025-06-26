@@ -10,7 +10,9 @@ import st.cbse.productionFacility.step.data.Step;
 @Local
 public interface IProductionMgmt {
     List<Machine> viewMachines();
+    
     UUID reserveMachine(Step type, UUID processId);
+    
     boolean programMachine(UUID machineId, UUID processId);
     boolean executeMachine(UUID machineId);
     boolean stopMachine(UUID machineId);
