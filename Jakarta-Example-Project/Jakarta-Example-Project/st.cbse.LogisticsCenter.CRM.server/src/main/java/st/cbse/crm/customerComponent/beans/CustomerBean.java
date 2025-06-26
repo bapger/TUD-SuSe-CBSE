@@ -1,7 +1,5 @@
 package st.cbse.crm.customerComponent.beans;
 
-import jakarta.ejb.LocalBean;
-
 import jakarta.ejb.Stateless;
 import jakarta.persistence.*;
 import java.util.UUID;
@@ -31,8 +29,7 @@ public class CustomerBean implements ICustomerMgmt {
             query.setParameter("email", email).setParameter("pass", password);
             return query.getSingleResult().getId();
     	} catch (NoResultException ex) {
-            // bad credentials → sentinel or exception
-    		throw new NoResultException();    // or throw AuthenticationException
+    		throw new NoResultException();
         }
     }
 
