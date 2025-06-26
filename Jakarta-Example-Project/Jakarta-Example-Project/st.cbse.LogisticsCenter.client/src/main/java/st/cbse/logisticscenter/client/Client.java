@@ -211,9 +211,15 @@ public class Client {
 			System.out.println("1  List processes");
 			System.out.println("2  Get processes by status");
 			System.out.println("3  Pause a process");
-			System.out.println("4  Logout");
+			System.out.println("4  Resume a process");
+			System.out.println("5  Cancel a process");
+			System.out.println("6  Logout");
 			System.out.println("0  Exit");
 			System.out.print("> ");
+
+			List<ProcessDTO> processes;
+			ProcessDTO chosenProcess;
+
 			switch (in.nextLine()) {
 				case "1":
 					listProcesses();
@@ -225,22 +231,46 @@ public class Client {
 					}
 					int choiceIndex = Integer.parseInt(in.nextLine());
 					ProcessStatus chosenStatus = status[choiceIndex - 1];
-					System.out.println("You chose : " + chosenStatus);
+					System.out.println("You chose : " + chosenStatus.name());
 					getProcessesByStatus(chosenStatus);
 					return true;
 				case "3":
-					List<ProcessDTO> processes = productionManagerMgmt.getAllProcesses();
+					processes = processMgmt.getProcessesByStatus("IN_PROGRESS");
 
 					for (int i = 1; i < processes.size() + 1; i++) {
-						System.out.println(i + " : " + processes.get(i - 1));
+						System.out.println(i + " : " + processes.get(i - 1).getId());
 					}
-					System.out.println("Choose process to stop");
-					ProcessDTO chosenProcess = processes.get(Integer.parseInt(in.nextLine()) - 1);
+					System.out.println("Choose process to pause");
+					chosenProcess = processes.get(Integer.parseInt(in.nextLine()) - 1);
 
-					System.out.println("You have chosen : " + chosenProcess);
-					stopProcess(chosenProcess);
+					System.out.println("You have chosen : " + chosenProcess.getId());
+					resumeProcess(chosenProcess);
 					return true;
 				case "4":
+					processes = processMgmt.getProcessesByStatus("PAUSED");
+
+					for (int i = 1; i < processes.size() + 1; i++) {
+						System.out.println(i + " : " + processes.get(i - 1).getId());
+					}
+					System.out.println("Choose paused process to resume");
+					chosenProcess = processes.get(Integer.parseInt(in.nextLine()) - 1);
+
+					System.out.println("You have chosen : " + chosenProcess.getId());
+					resumeProcess(chosenProcess);
+					return true;
+				case "5":
+					processes = productionManagerMgmt.getAllProcesses();
+
+					for (int i = 1; i < processes.size() + 1; i++) {
+						System.out.println(i + " : " + processes.get(i - 1).getId());
+					}
+					System.out.println("Choose process to stop");
+					chosenProcess = processes.get(Integer.parseInt(in.nextLine()) - 1);
+
+					System.out.println("You have chosen : " + chosenProcess.getId());
+					cancelProcess(chosenProcess);
+					return true;
+				case "6":
 					loggedProductionManager = null;
 					clearCache();
 					return true;
@@ -631,7 +661,15 @@ public class Client {
 		return processMgmt.getProcessesByStatus(status.name());
 	}
 
-	private static void stopProcess(ProcessDTO process) {
+	private static void pauseProcess(ProcessDTO process) {
+		processMgmt.pauseProcess(process.getId());
+	}
+
+	private static void resumeProcess(ProcessDTO process) {
+		processMgmt.resumeProcess(process.getId());
+	}
+
+	private static void cancelProcess(ProcessDTO process) {
 		processMgmt.cancelProcess(process.getId());
 	}
 	/* ===================================================================== */
