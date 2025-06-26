@@ -20,11 +20,13 @@ public interface IMachineMgmt {
     
     boolean reserveMachine(UUID machineId, UUID processId);
     boolean programMachine(UUID machineId);
-    boolean executeMachine(UUID machineId);
+    boolean executeMachine(UUID machineId, UUID processId);
     boolean stopMachine(UUID machineId);
     
     UUID retrieveFromOutput(UUID machineId);
     boolean canAcceptInput(UUID machineId);
     
     void notifyItemArrived(UUID machineId, UUID itemId);
+
+    MachineDTO getMachineDTO(UUID machineId);
 }

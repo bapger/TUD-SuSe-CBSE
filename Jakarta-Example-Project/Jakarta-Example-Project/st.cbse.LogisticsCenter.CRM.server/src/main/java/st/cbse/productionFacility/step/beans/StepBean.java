@@ -84,7 +84,7 @@ public class StepBean implements IStepMgmt {
             return false;
         }
 
-        boolean executed = machineMgmt.executeMachine(machineId);
+        boolean executed = machineMgmt.executeMachine(machineId,step.getProcessId());
         if (!executed) {
             LOG.warning("Failed to execute machine " + machineId);
             step.setStatus(StepStatus.PENDING);
