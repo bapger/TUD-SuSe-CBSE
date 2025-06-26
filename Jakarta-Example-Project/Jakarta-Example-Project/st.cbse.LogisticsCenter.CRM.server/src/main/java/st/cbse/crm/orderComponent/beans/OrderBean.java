@@ -16,270 +16,283 @@ import java.util.*;
 @Stateless
 public class OrderBean implements IOrderMgmt {
 
-    @PersistenceContext
-    private EntityManager em;
+	@PersistenceContext
+	private EntityManager em;
 
-    @Override
-    public UUID createOrder(UUID customerId, BigDecimal basePrice) {
-    	if (customerId == null)
-            throw new IllegalArgumentException("Customer ID cannot be null");
+	@Override
+	public UUID createOrder(UUID customerId, BigDecimal basePrice) {
+		if (customerId == null)
+			throw new IllegalArgumentException("Customer ID cannot be null");
 
-        // -----------------------------------------------------------------
-        // 1) Vérifier l’existence sans importer la classe Customer
-        // -----------------------------------------------------------------
-        Long nb = em.createQuery(
-                     "SELECT COUNT(c) FROM Customer c WHERE c.id = :cid",
-                     Long.class)
-                   .setParameter("cid", customerId)
-                   .getSingleResult();
+		// -----------------------------------------------------------------
+		// 1) Vérifier l’existence sans importer la classe Customer
+		// -----------------------------------------------------------------
+		Long nb = em.createQuery(
+				"SELECT COUNT(c) FROM Customer c WHERE c.id = :cid",
+				Long.class)
+				.setParameter("cid", customerId)
+				.getSingleResult();
 
-        if (nb == 0) {                       // aucun client → 404
-            throw new IllegalArgumentException(
-                  "Customer not found: " + customerId);
-        }
+		if (nb == 0) {
+			throw new IllegalArgumentException(
+					"Customer not found: " + customerId);
+		}
 
-        Order order = new Order();
-        order.setCustomerId(customerId);
-        order.setBasePrice(basePrice);
-        order.setTotal(basePrice);
-        order.setCreationDate(LocalDateTime.now());
-        order.setOrderStatus(OrderStatus.CREATED);
-        em.persist(order);
+		Order order = new Order();
+		order.setCustomerId(customerId);
+		order.setBasePrice(basePrice);
+		order.setTotal(basePrice);
+		order.setCreationDate(LocalDateTime.now());
+		order.setOrderStatus(OrderStatus.CREATED);
+		em.persist(order);
 
-        return order.getId();
-    }
+		return order.getId();
+	}
 
-    /* ================================================================= */
-    /* 2. Printing-request                                               */
-    /* ================================================================= */
-    @Override
-    public UUID addPrintRequest(UUID orderId, String stlPath, String note) {
-        Order order = em.find(Order.class, orderId);
-        if (order == null)
-            throw new IllegalArgumentException("Order not found: " + orderId);
+	/* ================================================================= */
+	/* 2. Printing-request                                               */
+	/* ================================================================= */
+	@Override
+	public UUID addPrintRequest(UUID orderId, String stlPath, String note) {
+		Order order = em.find(Order.class, orderId);
+		if (order == null)
+			throw new IllegalArgumentException("Order not found: " + orderId);
 
-        PrintingRequest pr = new PrintingRequest();
-        pr.setOrder(order);
-        pr.setOrderId(orderId);
-        pr.setStlPath(stlPath);
-        pr.setNote(note);
-        em.persist(pr);
+		PrintingRequest pr = new PrintingRequest();
+		pr.setOrder(order);
+		pr.setOrderId(orderId);
+		pr.setStlPath(stlPath);
+		pr.setNote(note);
+		em.persist(pr);
 
-        order.getPrintingRequests().add(pr);
-        return pr.getId();
-    }
+		order.getPrintingRequests().add(pr);
+		return pr.getId();
+	}
 
-    /* ================================================================= */
-    /* 3.  Options                                                       */
-    /* ================================================================= */
-    @Override
-    public void addPaintJobOption(UUID requestId, String colour, int layers) {
-        Option opt = new PaintJob(colour,layers);
-        addOption(requestId, opt);
-    }
+	/* ================================================================= */
+	/* 3.  Options                                                       */
+	/* ================================================================= */
+	@Override
+	public void addPaintJobOption(UUID requestId, String colour, int layers) {
+		Option opt = new PaintJob(colour,layers);
+		addOption(requestId, opt);
+	}
 
-    @Override
-    public void addSmoothingOption(UUID requestId, String granularity) {
-        Option opt = new Smoothing(granularity);
-        addOption(requestId, opt);
-    }
+	@Override
+	public void addSmoothingOption(UUID requestId, String granularity) {
+		Option opt = new Smoothing(granularity);
+		addOption(requestId, opt);
+	}
 
-    @Override
-    public void addEngravingOption(UUID requestId,
-                                   String text, String font, String imagePath) {
-        Option opt = new Engraving(text,font,imagePath);
-        addOption(requestId, opt);
-    }
+	@Override
+	public void addEngravingOption(UUID requestId,
+			String text, String font, String imagePath) {
+		Option opt = new Engraving(text,font,imagePath);
+		addOption(requestId, opt);
+	}
 
-    /* ----------------------------------------------------------------- */
-    private void addOption(UUID requestId, Option option) {
-        PrintingRequest pr = em.find(PrintingRequest.class, requestId);
-        if (pr == null)
-            throw new IllegalArgumentException("Request not found: " + requestId);
+	/* ----------------------------------------------------------------- */
+	private void addOption(UUID requestId, Option option) {
+		PrintingRequest pr = em.find(PrintingRequest.class, requestId);
+		if (pr == null)
+			throw new IllegalArgumentException("Request not found: " + requestId);
 
-        option.setPrice(unitPrice(option));     // prix unitaire
-        option.setPrintingRequest(pr);
-        em.persist(option);
+		option.setPrice(unitPrice(option));     // prix unitaire
+		option.setPrintingRequest(pr);
+		em.persist(option);
 
-        pr.add(option);
-        recalcTotal(pr.getOrder());
-    }
+		pr.add(option);
+		recalcTotal(pr.getOrder());
+	}
 
-    /* ================================================================= */
-    /* 4.  Finalisation & paiement                                       */
-    /* ================================================================= */
-    @Override
-    public void finalizeOrder(UUID orderId) {
-        Order o = em.find(Order.class, orderId);
-        if (o == null) throw new IllegalArgumentException("Order not found");
-        if (o.getOrderStatus() != OrderStatus.CREATED)
-            throw new IllegalStateException("Order already finalised");
+	/* ================================================================= */
+	/* 4.  Finalisation & paiement                                       */
+	/* ================================================================= */
+	@Override
+	public void finalizeOrder(UUID orderId) {
+		Order o = em.find(Order.class, orderId);
+		if (o == null) throw new IllegalArgumentException("Order not found");
+		if (o.getOrderStatus() != OrderStatus.CREATED)
+			throw new IllegalStateException("Order already finalised");
 
-        o.setOrderStatus(OrderStatus.COMPLETED);
-    }
+		o.setOrderStatus(OrderStatus.COMPLETED);
+	}
 
-    @Override
-    public void pay(UUID orderId, String txnRef) {
-        Order o = em.find(Order.class, orderId);
-        if (o == null) throw new IllegalArgumentException("Order not found");
-        if (o.getOrderStatus() != OrderStatus.SHIPPED)
-            throw new IllegalStateException("Order must be shipped first");
+	@Override
+	public void pay(UUID orderId, String txnRef) {
+		Order o = em.find(Order.class, orderId);
+		if (o == null) throw new IllegalArgumentException("Order not found");
+		if (o.getOrderStatus() != OrderStatus.SHIPPED)
+			throw new IllegalStateException("Order must be shipped first");
 
-        Invoice inv = o.getInvoice();
-        if (inv == null) throw new IllegalStateException("No invoice for order");
+		Invoice inv = o.getInvoice();
+		if (inv == null) throw new IllegalStateException("No invoice for order");
 
-        inv.setPaymentRef(txnRef);
-        inv.setPaidDate(LocalDateTime.now());
-        o.setOrderStatus(OrderStatus.COMPLETED);
-    }
+		inv.setPaymentRef(txnRef);
+		inv.setPaidDate(LocalDateTime.now());
+		o.setOrderStatus(OrderStatus.COMPLETED);
+	}
 
-    /* ============================================================= */
-    /* 5.  Order history (DTOs, not entities)                        */
-    /* ============================================================= */
-    @Override
-    public List<OrderDTO> getOrdersByCustomer(UUID customerId) {
+	/* ============================================================= */
+	/* 5.  Order history (DTOs, not entities)                        */
+	/* ============================================================= */
+	@Override
+	public List<OrderDTO> getOrdersByCustomer(UUID customerId) {
 
-        // --- build entity graph ------------------------------------------------
-        EntityGraph<Order> g = em.createEntityGraph(Order.class);
-        Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
-        pr.addSubgraph("options");
+		// --- build entity graph ------------------------------------------------
+		EntityGraph<Order> g = em.createEntityGraph(Order.class);
+		Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
+		pr.addSubgraph("options");
 
-        // --- run JPQL query ----------------------------------------------------
-        List<Order> orders = em.createQuery(
-                "SELECT DISTINCT o " +
-                "FROM   Order o " +
-                "WHERE  o.customerId = :cid " +
-                "ORDER  BY o.creationDate DESC", Order.class)
-            .setParameter("cid", customerId)
-            .setHint("jakarta.persistence.fetchgraph", g)
-            .getResultList();
+		// --- run JPQL query ----------------------------------------------------
+		List<Order> orders = em.createQuery(
+				"SELECT DISTINCT o " +
+						"FROM   Order o " +
+						"WHERE  o.customerId = :cid " +
+						"ORDER  BY o.creationDate DESC", Order.class)
+				.setParameter("cid", customerId)
+				.setHint("jakarta.persistence.fetchgraph", g)
+				.getResultList();
 
-        // --- map entity graph → DTO tree --------------------------------------
-        return orders.stream()
-                     .map(OrderDTO::of)
-                     // use .toList() on JDK 16+, otherwise Collectors.toList()
-                     .collect(java.util.stream.Collectors.toList());
-    }
+		// --- map entity graph → DTO tree --------------------------------------
+		return orders.stream()
+				.map(OrderDTO::of)
+				// use .toList() on JDK 16+, otherwise Collectors.toList()
+				.collect(java.util.stream.Collectors.toList());
+	}
 
-    /* ================================================================= */
-    /*  Helpers                                                          */
-    /* ================================================================= */
-    private void recalcTotal(Order order) {
-    	List<Option> ops;
-        BigDecimal total = order.getBasePrice();
-        for (PrintingRequest pr : order.getPrintingRequests()) {
-        	ops = (List<Option>) pr.getOptions();
-            for (Option op : ops)
-                total = total.add(op.getPrice());
-        }
-        order.setTotal(total);
-        
-    }
+	/* ================================================================= */
+	/*  Helpers                                                          */
+	/* ================================================================= */
+	private void recalcTotal(Order order) {
+		List<Option> ops;
+		BigDecimal total = order.getBasePrice();
+		for (PrintingRequest pr : order.getPrintingRequests()) {
+			ops = (List<Option>) pr.getOptions();
+			for (Option op : ops)
+				total = total.add(op.getPrice());
+		}
+		order.setTotal(total);
 
-    private BigDecimal unitPrice(Option option) {
-        if (option instanceof PaintJob)   return new BigDecimal("4.00");
-        if (option instanceof Smoothing)  return new BigDecimal("2.50");
-        if (option instanceof Engraving)  return new BigDecimal("6.00");
-        return BigDecimal.ZERO;
-    }
-    
-    @Override
-    public PrintRequestDTO getPrintRequestDTO(UUID printingRequestId) {
-        if (printingRequestId == null) {
-            throw new IllegalArgumentException("PrintingRequest ID cannot be null");
-        }
-        
-        // Récupérer la PrintingRequest avec ses options en une seule requête
-        PrintingRequest printRequest = em.createQuery(
-                "SELECT pr FROM PrintingRequest pr " +
-                "LEFT JOIN FETCH pr.options " +
-                "WHERE pr.id = :id", PrintingRequest.class)
-            .setParameter("id", printingRequestId)
-            .getSingleResult();
-        
-        if (printRequest == null) {
-            throw new NoResultException("PrintingRequest not found with ID: " + printingRequestId);
-        }
-        
-        // Convertir en DTO en utilisant la méthode statique of()
-        return PrintRequestDTO.of(printRequest);
-    }
-    
-    @Override
-    public OrderDTO getOrderDTO(UUID orderId) {
-        if (orderId == null) {
-            throw new IllegalArgumentException("Order ID cannot be null");
-        }
+	}
 
-        // strict-JPA : pas d’alias sur le fetch-join
-        Order order = em.createQuery(
-                "SELECT DISTINCT o " +
-                "FROM   Order o " +
-                "LEFT   JOIN FETCH o.printingRequests " +   // OK sans alias
-                "WHERE  o.id = :id",
-                Order.class)
-            .setParameter("id", orderId)
-            .getSingleResult();           // NoResultException propagée si rien
+	private BigDecimal unitPrice(Option option) {
+		if (option instanceof PaintJob)   return new BigDecimal("4.00");
+		if (option instanceof Smoothing)  return new BigDecimal("2.50");
+		if (option instanceof Engraving)  return new BigDecimal("6.00");
+		return BigDecimal.ZERO;
+	}
 
-        return OrderDTO.of(order);        // mapping entité → DTO
-    }
-    
-    @Override
-    public List<OrderDTO> fetchAllOrderDTOs() {
-    EntityGraph<Order> g = em.createEntityGraph(Order.class);
-    Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
-    pr.addSubgraph("options");
-    List<Order> orders = em.createQuery(
-            "SELECT DISTINCT o " +
-            "FROM   Order o " +
-            "ORDER  BY o.creationDate DESC",
-            Order.class)
-        .setHint("jakarta.persistence.fetchgraph", g)   // on force le graph
-        .getResultList();
+	@Override
+	public PrintRequestDTO getPrintRequestDTO(UUID printingRequestId) {
+		if (printingRequestId == null) {
+			throw new IllegalArgumentException("PrintingRequest ID cannot be null");
+		}
 
-    return orders.stream()
-                 .map(OrderDTO::of)                     // méthode statique déjà existante
-                 .collect(java.util.stream.Collectors.toList());
-    }
+		PrintingRequest printRequest = em.createQuery(
+				"SELECT pr FROM PrintingRequest pr " +
+						"LEFT JOIN FETCH pr.options " +
+						"WHERE pr.id = :id", PrintingRequest.class)
+				.setParameter("id", printingRequestId)
+				.getSingleResult();
 
-    @Override
-    public void addNoteToPrintRequest(UUID requestId, String note) {
+		if (printRequest == null) {
+			throw new NoResultException("PrintingRequest not found with ID: " + printingRequestId);
+		}
 
-        if (requestId == null) {
-            throw new IllegalArgumentException("requestId must not be null");
-        }
-        if (note == null || note.isBlank()) {
-            throw new IllegalArgumentException("note must not be empty");
-        }
+		return PrintRequestDTO.of(printRequest);
+	}
 
-        try {
-            /* 1. Récupérer la PrintingRequest (avec verrou optimiste si besoin) */
-            PrintingRequest pr = em.createQuery(
-                    "SELECT pr FROM PrintingRequest pr WHERE pr.id = :id",
-                    PrintingRequest.class)
-                .setParameter("id", requestId)
-                .getSingleResult();                 // lèvera NoResultException si absent
+	@Override
+	public OrderDTO getOrderDTO(UUID orderId) {
+		if (orderId == null) {
+			throw new IllegalArgumentException("Order ID cannot be null");
+		}
 
-            /* 2. Mettre à jour la note */
-            pr.setNote(note);                       // ou pr.appendNote(note) si liste
+		Order order = em.createQuery(
+				"SELECT DISTINCT o " +
+						"FROM   Order o " +
+						"LEFT   JOIN FETCH o.printingRequests " +
+						"WHERE  o.id = :id",
+						Order.class)
+				.setParameter("id", orderId)
+				.getSingleResult();
 
-            /* 3. Flush pour que l’exception (si contrainte) soit locale */
-            em.flush();
-        }
-        catch (NoResultException ex) {
-            throw new NoResultException("PrintRequest not found: " + requestId);
-        }
-        /* les autres PersistenceException sont propagées telles quelles */
-    }
-    
-    @Override
-    public void updateStatus(UUID orderId, String status) {
-        Order order = em.find(Order.class, orderId);
-        if (order == null)
-            throw new IllegalArgumentException("Order not found: " + orderId);
-        order.setOrderStatus(OrderStatus.valueOf(status.toUpperCase(Locale.ROOT)));	
-    }
+		return OrderDTO.of(order);
+	}
 
+	@Override
+	public List<OrderDTO> fetchAllOrderDTOs() {
+		EntityGraph<Order> g = em.createEntityGraph(Order.class);
+		Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
+		pr.addSubgraph("options");
+		List<Order> orders = em.createQuery(
+				"SELECT DISTINCT o " +
+						"FROM   Order o " +
+						"ORDER  BY o.creationDate DESC",
+						Order.class)
+				.setHint("jakarta.persistence.fetchgraph", g)
+				.getResultList();
 
+		return orders.stream()
+				.map(OrderDTO::of)
+				.collect(java.util.stream.Collectors.toList());
+	}
+
+	@Override
+	public void addNoteToPrintRequest(UUID requestId, String note) {
+
+		if (requestId == null) {
+			throw new IllegalArgumentException("requestId must not be null");
+		}
+		if (note == null || note.isBlank()) {
+			throw new IllegalArgumentException("note must not be empty");
+		}
+
+		try {
+			PrintingRequest pr = em.createQuery(
+					"SELECT pr FROM PrintingRequest pr WHERE pr.id = :id",
+					PrintingRequest.class)
+					.setParameter("id", requestId)
+					.getSingleResult();
+			pr.setNote(note);
+
+			em.flush();
+		}
+		catch (NoResultException ex) {
+			throw new NoResultException("PrintRequest not found: " + requestId);
+		}
+	}
+
+	@Override
+	public void updateStatus(UUID orderId, String status) {
+		Order order = em.find(Order.class, orderId);
+		if (order == null)
+			throw new IllegalArgumentException("Order not found: " + orderId);
+		order.setOrderStatus(OrderStatus.valueOf(status.toUpperCase(Locale.ROOT)));	
+	}
+
+	@Override
+	public void updateStatusPrintingRequest(UUID printingRequestIDs, String status) {
+		PrintingRequest pr = em.find(PrintingRequest.class, printingRequestIDs);
+		if (pr == null)
+			throw new IllegalArgumentException("Printing request not found: " + printingRequestIDs);
+		pr.setStatus(PrintingRequestStatus.valueOf(status.toUpperCase(Locale.ROOT)));
+
+		if(status=="IN_STORAGE") {
+			Order order = em.find(Order.class,pr.getOrderId());
+			int count=0;
+			List<PrintingRequest> prs = order.getPrintingRequests();
+			for (PrintingRequest pr_temp : order.getPrintingRequests()) {
+				if(pr_temp.getStatus()!=PrintingRequestStatus.IN_STORAGE) {
+					count++;
+					break;
+				}
+			}
+			if(count==prs.size()) {
+				order.setOrderStatus(OrderStatus.FINISHED);
+			}
+		}
+	}
 
 }

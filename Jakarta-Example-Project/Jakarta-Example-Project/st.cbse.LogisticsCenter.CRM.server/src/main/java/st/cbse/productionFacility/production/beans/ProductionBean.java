@@ -18,6 +18,7 @@ import st.cbse.productionFacility.production.interfaces.IProductionMgmt;
 import st.cbse.productionFacility.production.machine.interfaces.IMachineMgmt;
 import st.cbse.productionFacility.production.machine.data.Machine;
 import st.cbse.productionFacility.production.machine.data.MachineStatus;
+import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 import st.cbse.productionFacility.storage.interfaces.IStorageMgmt;
@@ -39,6 +40,9 @@ public class ProductionBean implements IProductionMgmt {
 
 	@EJB
 	private IMachineMgmt machineMgmt;
+	
+	@EJB
+	private IOrderMgmt orderMgmt;
 
 	@EJB
 	private IProcessMgmt processMgmt;
@@ -337,6 +341,7 @@ public class ProductionBean implements IProductionMgmt {
 	            storageMgmt.updateItemLocation(transport.getItemId(), "In storage");
 	            processMgmt.notifyStepCompleted(transport.getProcessId(), transport.getFromMachineId());
 	            LOG.info("Item " + transport.getItemId() + " successfully stored as finished product");
+	            orderMgmt.updateStatusPrintingRequest(processDTO.getPrintRequestId(), "IN_STORAGE");
 	        } else {
 	            LOG.warning("Failed to convert process " + transport.getProcessId() + " to finished product");
 	        }

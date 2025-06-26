@@ -13,11 +13,11 @@ public class PrintingRequest {
 
 	private UUID orderId;
 	private String description;
+	private PrintingRequestStatus status;
 
-	/* --- nouvelles données requises par le modèle --- */
-	private String stlPath;           // chemin/URI du fichier STL
+	private String stlPath;
 	@Column(length = 1024)
-	private String note;              // note libre du client
+	private String note;
 
 	/* --- relations --- */
 	@ManyToOne
@@ -35,6 +35,14 @@ public class PrintingRequest {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public PrintingRequestStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(PrintingRequestStatus status) {
+		this.status = status;
 	}
 
 	public UUID getOrderId() {
