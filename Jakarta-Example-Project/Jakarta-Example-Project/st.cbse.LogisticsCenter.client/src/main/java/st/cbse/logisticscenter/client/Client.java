@@ -653,7 +653,9 @@ public class Client {
 		int num = 1;
 		System.out.println("\n=== Printing Requests ===");
 		for (PrintRequestDTO pr : selectedOrder.getPrintingRequests()) {
-			requestCache.p
+			requestCache.put(num, pr);
+			System.out.printf("[%d] STL=%s%n", num++, pr.getStlPath());
+			if (pr.getNote() != null && !pr.getNote().isBlank()) {
 
 				System.out.println("    Current note: " + pr.getNote());
 			}
@@ -763,8 +765,7 @@ public class Client {
 			System.out.printf("[%d] Request=%s  Order=%s%n",
 					num++, item.getPrintRequestId(), item.getOrderId());
 		}
-
-	* ===================================================================== */
+	}
 
 	private static void listProcesses() throws Exception {
 		List<ProcessDTO> processes = productionManagerMgmt.getAllProcesses();
