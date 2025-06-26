@@ -134,14 +134,22 @@ public class MachineBean implements IMachineMgmt {
 	        LOG.warning("Cannot execute machine " + machineId + " - machine null or not reserved");
 	        return false;
 	    }
+	    
+	    // AJOUT : Vérifier qu'aucun autre processus n'est actif
+	    if (machine.getActiveProcessId() != null) {
+	        LOG.warning("Machine " + machineId + " already has active process: " + machine.getActiveProcessId());
+	        return false;
+	    }
 
 	    LOG.info("Machine " + machineId + " before processing - outputProcessId: " + machine.getOutputProcessId());
-	    LOG.info("Machine " + machineId + " starting processing - hasOutput: " + machine.hasOutput());
 	    
+	    UUID itemId = null;
+	    
+	    // Pour PrintingMachine, créer l'item et stocker l'ID
 	    if (machine.getClass().getSimpleName().equals("PrintingMachine")) {
 	        LOG.info("PrintingMachine detected - creating UnfinishedProduct");
 	        if (processDTO != null) {
-	            UUID itemId = storageMgmt.createUnfinishedProduct(
+	            itemId = storageMgmt.createUnfinishedProduct(
 	                processId,
 	                processDTO.getPrintRequestId(),
 	                "stl_path"
@@ -150,6 +158,7 @@ public class MachineBean implements IMachineMgmt {
 	        }
 	    }
 	    
+	    // Démarrer le traitement
 	    if (!machine.hasInput()) {
 	        machine.setActiveProcessId(processId);
 	        machine.setStatus(MachineStatus.ACTIVE);
@@ -162,8 +171,11 @@ public class MachineBean implements IMachineMgmt {
 	    }
 	    
 	    em.merge(machine);
+	    em.flush(); // S'assurer que les changements sont persistés
+	    
 	    LOG.info("Machine " + machineId + " processing - " + machine.getActionMessage());
 	    
+	    // Simuler le temps de traitement
 	    try {
 	        Thread.sleep(machine.getProcessingTimeMillis());
 	    } catch (InterruptedException e) {
@@ -172,25 +184,28 @@ public class MachineBean implements IMachineMgmt {
 	        return false;
 	    }
 	    
-	    UUID activeProcessId = machine.getActiveProcessId();
-	    LOG.info("Machine " + machineId + " finishing - activeProcessId: " + activeProcessId);
-	    
+	    // Finir le traitement
 	    boolean finished = machine.finishProcessing();
-	    LOG.info("Machine " + machineId + " finishProcessing returned: " + finished);
-	    LOG.info("Machine " + machineId + " after finish - outputProcessId: " + machine.getOutputProcessId());
-	    LOG.info("Machine " + machineId + " after finish - status: " + machine.getStatus());
+	    if (!finished) {
+	        LOG.warning("Failed to finish processing on machine " + machineId);
+	        return false;
+	    }
+	    
+	    // MODIFICATION : Pour les machines qui créent des items, stocker l'itemId dans outputProcessId
+	    if (itemId != null) {
+	        machine.setOutputProcessId(itemId);
+	        LOG.info("Set outputProcessId to itemId: " + itemId);
+	    }
 	    
 	    em.merge(machine);
-	    em.flush();
+	    em.flush(); // Forcer la persistance avant la notification
 	    
-	    Machine verifyMachine = em.find(Machine.class, machineId);
-	    LOG.info("Machine " + machineId + " verification after flush - outputProcessId: " + verifyMachine.getOutputProcessId());
+	    LOG.info("Machine " + machineId + " completed - outputProcessId: " + machine.getOutputProcessId());
 	    
-	    LOG.info("Machine " + machineId + " completed processing");
-	    
-	    if (activeProcessId != null && processMgmt != null) {
+	    // Notifier après un court délai pour s'assurer de la persistance
+	    if (machine.getActiveProcessId() == null && processId != null && processMgmt != null) {
 	        timerService.createSingleActionTimer(500, new TimerConfig(
-	            new MachineCompletionInfo(activeProcessId, machineId), false));
+	            new MachineCompletionInfo(processId, machineId), false));
 	    }
 	    
 	    return true;
@@ -229,12 +244,14 @@ public class MachineBean implements IMachineMgmt {
 
 	@Override
 	public List<Machine> findAvailableMachinesByType(String machineType) {
-		return em.createQuery(
-				"SELECT m FROM Machine m WHERE m.status = :status AND TYPE(m) = :type", 
-				Machine.class)
-				.setParameter("status", MachineStatus.AVAILABLE)
-				.setParameter("type", machineType)
-				.getResultList();
+	    return em.createQuery(
+	            "SELECT m FROM Machine m WHERE m.status = :status " +
+	            "AND m.outputProcessId IS NULL " +  // AJOUT : output doit être vide
+	            "AND TYPE(m) = :type", 
+	            Machine.class)
+	            .setParameter("status", MachineStatus.AVAILABLE)
+	            .setParameter("type", machineType)
+	            .getResultList();
 	}
 
 	@Override
@@ -249,6 +266,18 @@ public class MachineBean implements IMachineMgmt {
 	    Machine machine = em.find(Machine.class, machineId);
 	    if (machine == null || machine.getStatus() != MachineStatus.AVAILABLE) {
 	        LOG.warning("Cannot reserve machine " + machineId + " - not available or not found");
+	        return false;
+	    }
+	    
+	    // AJOUT : Vérifier qu'il n'y a pas de processus actif ou en attente
+	    if (machine.getActiveProcessId() != null || machine.getInputProcessId() != null) {
+	        LOG.warning("Machine " + machineId + " has pending work - cannot reserve");
+	        return false;
+	    }
+	    
+	    // AJOUT : Vérifier que l'output est vide
+	    if (machine.getOutputProcessId() != null) {
+	        LOG.warning("Machine " + machineId + " has item in output - cannot reserve until output is cleared");
 	        return false;
 	    }
 	    
@@ -292,17 +321,28 @@ public class MachineBean implements IMachineMgmt {
 
 	@Override
 	public UUID retrieveFromOutput(UUID machineId) {
-		Machine machine = em.find(Machine.class, machineId);
-		if (machine == null || !machine.hasOutput()) {
-			return null;
-		}
+	    Machine machine = em.find(Machine.class, machineId);
+	    if (machine == null || !machine.hasOutput()) {
+	        return null;
+	    }
 
-		UUID processId = machine.getOutputProcessId();
-		if (processId != null) {
-			machine.setOutputProcessId(null);
-			em.merge(machine);
-		}
-		return processId;
+	    UUID processId = machine.getOutputProcessId();
+	    if (processId != null) {
+	        machine.setOutputProcessId(null);
+	        em.merge(machine);
+	        LOG.info("Retrieved and cleared output " + processId + " from machine " + machineId);
+	    }
+	    return processId;
+	}
+	
+	@Override
+	public void clearOutput(UUID machineId) {
+	    Machine machine = em.find(Machine.class, machineId);
+	    if (machine != null) {
+	        LOG.info("Clearing output of machine " + machineId);
+	        machine.setOutputProcessId(null);
+	        em.merge(machine);
+	    }
 	}
 
 	@Override
@@ -340,18 +380,19 @@ public class MachineBean implements IMachineMgmt {
 
 	@Override
 	public List<MachineDTO> findAvailableMachineDTOsByType(String machineType) {
-		// Récupérer toutes les machines disponibles
-		List<Machine> allAvailableMachines = em.createQuery(
-				"SELECT m FROM Machine m WHERE m.status = :status", 
-				Machine.class)
-				.setParameter("status", MachineStatus.AVAILABLE)
-				.getResultList();
+	    // Récupérer toutes les machines disponibles avec output vide
+	    List<Machine> allAvailableMachines = em.createQuery(
+	            "SELECT m FROM Machine m WHERE m.status = :status " +
+	            "AND m.outputProcessId IS NULL", // AJOUT : output doit être vide
+	            Machine.class)
+	            .setParameter("status", MachineStatus.AVAILABLE)
+	            .getResultList();
 
-		// Filtrer par type de classe en Java
-		return allAvailableMachines.stream()
-				.filter(machine -> machine.getClass().getSimpleName().equals(machineType))
-				.map(this::convertToDTO)
-				.collect(Collectors.toList());
+	    // Filtrer par type de classe en Java
+	    return allAvailableMachines.stream()
+	            .filter(machine -> machine.getClass().getSimpleName().equals(machineType))
+	            .map(this::convertToDTO)
+	            .collect(Collectors.toList());
 	}
 
 	private MachineDTO convertToDTO(Machine machine) {

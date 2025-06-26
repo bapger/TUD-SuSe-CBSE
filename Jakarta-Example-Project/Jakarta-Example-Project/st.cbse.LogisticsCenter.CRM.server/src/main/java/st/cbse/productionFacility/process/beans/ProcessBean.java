@@ -172,107 +172,78 @@ public class ProcessBean implements IProcessMgmt {
             return;
         }
 
-        // Récupérer l'étape précédente pour savoir d'où vient l'item
         ProcessStep previousStep = getPreviousCompletedStep(process, nextStep);
         
         if (previousStep != null && previousStep.getAssignedMachineId() != null) {
             LOG.info("Previous step found: " + previousStep.getStepType() + 
                     " with machine " + previousStep.getAssignedMachineId());
             
-            // Vérifier d'abord si l'item est prêt dans l'output via le DTO
             MachineDTO fromMachineDTO = machineMgmt.getMachineDTO(previousStep.getAssignedMachineId());
             
             if (fromMachineDTO == null) {
-                LOG.warning("Cannot get DTO for machine " + previousStep.getAssignedMachineId() + " - machine might not exist");
+                LOG.warning("Cannot get DTO for machine " + previousStep.getAssignedMachineId());
                 return;
             }
             
-            // Ajouter des logs détaillés sur l'état de la machine
             LOG.info("Machine " + fromMachineDTO.getId() + " state: " +
                     " Status=" + fromMachineDTO.getStatus() + 
                     ", OutputProcessId=" + fromMachineDTO.getOutputProcessId() + 
-                    ", ActiveProcessId=" + fromMachineDTO.getActiveProcessId() +
-                    ", InputProcessId=" + fromMachineDTO.getInputProcessId() +
-                    ", HasOutput=" + fromMachineDTO.isHasOutput() +
-                    ", HasInput=" + fromMachineDTO.isHasInput());
+                    ", HasOutput=" + fromMachineDTO.isHasOutput());
             
-            if (fromMachineDTO.getOutputProcessId() == null) {
+            // MODIFICATION : L'outputProcessId contient maintenant l'itemId pour les machines qui créent des items
+            UUID itemId = fromMachineDTO.getOutputProcessId();
+            
+            if (itemId == null) {
                 LOG.info("Item not yet ready in output of machine " + previousStep.getAssignedMachineId() + 
                         " - scheduling retry in 2 seconds");
                 
-                // Réessayer dans 2 secondes
                 timerService.createSingleActionTimer(2000, new TimerConfig(
                     new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
                 return;
             }
             
-            LOG.info("Output is ready - proceeding with transport setup");
+            LOG.info("Output is ready with itemId: " + itemId + " - proceeding with transport setup");
             
-            // Il y a une étape précédente, donc besoin de transport
+            // Rechercher la machine cible...
             String machineType = mapStepToMachineType(nextStep.getStepType());
-            LOG.info("Looking for available machines of type: " + machineType);
-            
             List<MachineDTO> availableMachines = machineMgmt.findAvailableMachineDTOsByType(machineType);
-            LOG.info("Found " + availableMachines.size() + " available machines of type " + machineType);
             
             if (!availableMachines.isEmpty()) {
                 MachineDTO targetMachine = availableMachines.get(0);
-                LOG.info("Target machine found: " + targetMachine.getId() + " (Type: " + targetMachine.getType() + 
-                        ", Status: " + targetMachine.getStatus() + ")");
                 
-                // Réserver la machine cible
-                LOG.info("Attempting to reserve machine " + targetMachine.getId());
                 if (machineMgmt.reserveMachine(targetMachine.getId(), process.getId())) {
-                    LOG.info("Target machine reserved successfully");
-                    
-                    // Assigner la machine à l'étape
                     nextStep.setAssignedMachineId(targetMachine.getId());
                     em.merge(process);
-                    LOG.info("Assigned machine " + targetMachine.getId() + " to step " + nextStep.getStepType());
-                    
-                    // Initier le transport
-                    LOG.info("Initiating transport from machine " + previousStep.getAssignedMachineId() + 
-                            " to machine " + targetMachine.getId());
                     
                     boolean transported = productionMgmt.transportItem(
-                        process.getId(),
-                        process.getId(),
-                        previousStep.getAssignedMachineId(),
-                        targetMachine.getId()
-                    );
+                    	    itemId,
+                    	    process.getId(),
+                    	    previousStep.getAssignedMachineId(),
+                    	    targetMachine.getId()
+                    	);
                     
                     if (transported) {
                         LOG.info("Transport initiated successfully");
-                        // Le reste sera géré par le timer de transport
                     } else {
-                        LOG.warning("Transport failed - releasing machine reservation");
-                        LOG.warning("Check ProductionBean logs for transport failure details");
+                        LOG.warning("Transport failed");
                         machineMgmt.stopMachine(targetMachine.getId());
                         nextStep.setAssignedMachineId(null);
                         em.merge(process);
-                    
                         
-                        // Réessayer dans 5 secondes
-                        LOG.info("Scheduling retry in 5 seconds");
                         timerService.createSingleActionTimer(5000, new TimerConfig(
                             new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
                     }
                 } else {
-                    LOG.warning("Failed to reserve target machine " + targetMachine.getId() + " - will retry");
-                    // Réessayer dans 5 secondes
-                    LOG.info("Scheduling retry in 5 seconds");
+                    LOG.warning("Failed to reserve target machine");
                     timerService.createSingleActionTimer(5000, new TimerConfig(
                         new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
                 }
             } else {
-                LOG.info("No available machine for step " + nextStep.getStepType() + " - will retry");
-                // Réessayer dans 10 secondes
-                LOG.info("Scheduling retry in 10 seconds");
+                LOG.info("No available machine for step " + nextStep.getStepType());
                 timerService.createSingleActionTimer(10000, new TimerConfig(
                     new ProcessingTask(process.getId(), ProcessingTask.Type.NEXT_STEP), false));
             }
         } else {
-            // Première étape ou pas de machine précédente
             LOG.info("No previous step - starting step directly");
             tryToStartStep(process, nextStep);
         }

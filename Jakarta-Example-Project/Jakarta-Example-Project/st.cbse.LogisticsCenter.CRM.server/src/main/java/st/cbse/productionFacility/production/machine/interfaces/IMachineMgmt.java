@@ -27,7 +27,7 @@ public interface IMachineMgmt {
     boolean canAcceptInput(UUID machineId);
     
     void notifyItemArrived(UUID machineId, UUID itemId);
-
+    void clearOutput(UUID machineId);
     MachineDTO getMachineDTO(UUID machineId);
     
     boolean pauseMachine(UUID machineId);
