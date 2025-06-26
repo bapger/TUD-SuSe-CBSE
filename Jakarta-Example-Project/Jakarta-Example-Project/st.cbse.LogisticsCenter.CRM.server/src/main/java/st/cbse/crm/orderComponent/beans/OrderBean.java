@@ -331,5 +331,104 @@ public class OrderBean implements IOrderMgmt {
 	    
 	    LOG.info("========================================");
 	}
+	
+	
+	// In OrderBean class, add these methods:
+
+	@Override
+	public void createInvoiceForShippedOrder(UUID orderId) throws Exception {
+	    // Find the order
+	    Order order = em.find(Order.class, orderId);
+	    if (order == null) {
+	        throw new IllegalArgumentException("Order not found: " + orderId);
+	    }
+	    
+	    // Verify order is in correct status
+	    if (order.getOrderStatus() != OrderStatus.FINISHED) {
+	        throw new IllegalStateException("Can only create invoice for FINISHED orders. Current status: " + order.getOrderStatus());
+	    }
+	    
+	    // Check if invoice already exists
+	    List<Invoice> existingInvoices = em.createQuery(
+	        "SELECT i FROM Invoice i WHERE i.order.id = :orderId", Invoice.class)
+	        .setParameter("orderId", orderId)
+	        .getResultList();
+	    
+	    if (!existingInvoices.isEmpty()) {
+	        throw new IllegalStateException("Invoice already exists for order: " + orderId);
+	    }
+	    
+	    // Create the invoice
+	    Invoice invoice = new Invoice(order, order.getTotal());
+	    em.persist(invoice);
+	    
+	    // Update order status to SHIPPED
+	    order.setOrderStatus(OrderStatus.SHIPPED);
+	    em.merge(order);
+	    
+	    LOG.info("Created invoice " + invoice.getId() + " for order " + orderId);
+	}
+
+	@Override
+	public void payInvoice(UUID orderId, String paymentReference) throws Exception {
+	    // Find the order
+	    Order order = em.find(Order.class, orderId);
+	    if (order == null) {
+	        throw new IllegalArgumentException("Order not found: " + orderId);
+	    }
+	    
+	    // Find the invoice for this order
+	    Invoice invoice;
+	    try {
+	        invoice = em.createQuery(
+	            "SELECT i FROM Invoice i WHERE i.order.id = :orderId", Invoice.class)
+	            .setParameter("orderId", orderId)
+	            .getSingleResult();
+	    } catch (NoResultException e) {
+	        throw new IllegalStateException("No invoice found for order: " + orderId);
+	    }
+	    
+	    // Check if already paid
+	    if (invoice.isPaid()) {
+	        throw new IllegalStateException("Invoice already paid on: " + invoice.getPaidDate());
+	    }
+	    
+	    // Record the payment
+	    invoice.setPaymentRef(paymentReference);
+	    invoice.setPaidDate(LocalDateTime.now());
+	    em.merge(invoice);
+	    
+	    LOG.info("Invoice " + invoice.getId() + " paid with reference: " + paymentReference);
+	}
+
+	@Override
+	public boolean hasUnpaidInvoice(UUID orderId) throws Exception {
+	    // Find the order
+	    Order order = em.find(Order.class, orderId);
+	    if (order == null) {
+	        throw new IllegalArgumentException("Order not found: " + orderId);
+	    }
+	    
+	    // Check if order is shipped (only shipped orders have invoices)
+	    if (order.getOrderStatus() != OrderStatus.SHIPPED) {
+	        return false;
+	    }
+	    
+	    // Find invoice for this order
+	    List<Invoice> invoices = em.createQuery(
+	        "SELECT i FROM Invoice i WHERE i.order.id = :orderId", Invoice.class)
+	        .setParameter("orderId", orderId)
+	        .getResultList();
+	    
+	    if (invoices.isEmpty()) {
+	        return false;  // No invoice exists
+	    }
+	    
+	    // Check if the invoice is unpaid
+	    Invoice invoice = invoices.get(0);  // Should only be one invoice per order
+	    return !invoice.isPaid();
+	}
+	
+	
 
 }

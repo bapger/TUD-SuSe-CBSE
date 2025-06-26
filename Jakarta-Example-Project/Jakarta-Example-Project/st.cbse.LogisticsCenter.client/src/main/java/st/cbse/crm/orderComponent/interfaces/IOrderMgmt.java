@@ -26,4 +26,10 @@ public interface IOrderMgmt {
 
 	List<OrderDTO> getOrdersByCustomer(UUID customerId);
 
+	void createInvoiceForShippedOrder(UUID id);
+
+	boolean hasUnpaidInvoice(UUID id);
+
+	void payInvoice(UUID id, String ref);
+
 }

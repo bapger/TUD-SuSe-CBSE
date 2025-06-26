@@ -38,4 +38,10 @@ public interface IOrderMgmt {
 
 	List<OrderDTO> fetchAllOrderDTOs();
 
+	void createInvoiceForShippedOrder(UUID orderId) throws Exception;
+
+	void payInvoice(UUID orderId, String paymentReference) throws Exception;
+
+	boolean hasUnpaidInvoice(UUID orderId) throws Exception;
+
 }

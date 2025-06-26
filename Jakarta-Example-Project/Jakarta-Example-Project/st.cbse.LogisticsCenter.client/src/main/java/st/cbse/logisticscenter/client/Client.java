@@ -502,35 +502,92 @@ public class Client {
 
 	/* ------------------------- Pay ------------------------------ */
 	private static void payWithSelection(UUID customerId) throws Exception {
-		try {
-			viewOrderHistory(customerId);
-
-			Map<Integer, OrderDTO> unpaidOrders = new HashMap<>();
-			int num = 1;
-			for (Map.Entry<Integer, OrderDTO> entry : orderCache.entrySet()) {
-				OrderDTO order = entry.getValue();
-				if ("PENDING".equals(order.getStatus()) || "CREATED".equals(order.getStatus())) {
-					unpaidOrders.put(num++, order);
-				}
-			}
-
-			if (unpaidOrders.isEmpty()) {
-				System.out.println("\nNo unpaid orders.");
-				return;
-			}
-
-			orderCache = unpaidOrders;
-			OrderDTO selectedOrder = selectOrder("Select order to pay:");
-
-			if (selectedOrder != null) {
-				System.out.print("Transaction reference: ");
-				String ref = in.nextLine();
-				orderMgmt.pay(selectedOrder.getId(), ref);
-				System.out.println("[✓] Payment booked.");
-			}
-		} catch (Exception e) {
-			System.out.println("Payment failed: " + e.getMessage());
-		}
+	    try {
+	        // Get all orders for this customer
+	        List<OrderDTO> orders = orderMgmt.getOrdersByCustomer(customerId);
+	        
+	        if (orders.isEmpty()) {
+	            System.out.println("No orders found.");
+	            return;
+	        }
+	        
+	        Map<Integer, OrderDTO> payableItems = new HashMap<>();
+	        int num = 1;
+	        
+	        System.out.println("\n=== Payment Options ===");
+	        
+	        // Show unpaid orders (before shipping)
+	        System.out.println("\n-- Unpaid Orders (Pre-shipping) --");
+	        boolean hasUnpaidOrders = false;
+	        for (OrderDTO order : orders) {
+	            if ("PENDING".equals(order.getStatus()) || "CREATED".equals(order.getStatus()) || "COMPLETED".equals(order.getStatus())) {
+	                payableItems.put(num, order);
+	                System.out.printf("[%d] Order %s - €%s (Status: %s)%n",
+	                        num++, order.getId().toString().substring(0, 8), 
+	                        order.getTotal(), order.getStatus());
+	                hasUnpaidOrders = true;
+	            }
+	        }
+	        if (!hasUnpaidOrders) {
+	            System.out.println("  None");
+	        }
+	        
+	        // Show unpaid invoices (shipped orders)
+	        System.out.println("\n-- Unpaid Invoices (Post-shipping) --");
+	        boolean hasUnpaidInvoices = false;
+	        for (OrderDTO order : orders) {
+	            if (OrderStatus.SHIPPED.toString().equals(order.getStatus())) {
+	                // Check if this shipped order has an unpaid invoice
+	                try {
+	                    if (orderMgmt.hasUnpaidInvoice(order.getId())) {
+	                        payableItems.put(num, order);
+	                        System.out.printf("[%d] Invoice for Order %s - €%s%n",
+	                                num++, order.getId().toString().substring(0, 8), 
+	                                order.getTotal());
+	                        System.out.println("      Items:");
+	                        for (PrintRequestDTO pr : order.getPrintingRequests()) {
+	                            System.out.printf("        - %s%n", pr.getStlPath());
+	                        }
+	                        hasUnpaidInvoices = true;
+	                    }
+	                } catch (Exception e) {
+	                    // Skip if can't check invoice status
+	                }
+	            }
+	        }
+	        if (!hasUnpaidInvoices) {
+	            System.out.println("  None");
+	        }
+	        
+	        if (payableItems.isEmpty()) {
+	            System.out.println("\n[✓] All orders and invoices are paid!");
+	            return;
+	        }
+	        
+	        // Let user select what to pay
+	        orderCache = payableItems;
+	        OrderDTO selectedOrder = selectOrder("Select item to pay:");
+	        
+	        if (selectedOrder != null) {
+	            System.out.print("Transaction reference: ");
+	            String ref = in.nextLine();
+	            
+	            if (OrderStatus.SHIPPED.toString().equals(selectedOrder.getStatus())) {
+	                // Pay invoice
+	                System.out.println("\n[...] Processing invoice payment...");
+	                orderMgmt.payInvoice(selectedOrder.getId(), ref);
+	                System.out.println("[✓] Invoice paid successfully!");
+	                System.out.println("    Thank you for your payment.");
+	            } else {
+	                // Pay order (before shipping)
+	                System.out.println("\n[...] Processing order payment...");
+	                orderMgmt.pay(selectedOrder.getId(), ref);
+	                System.out.println("[✓] Order payment booked.");
+	            }
+	        }
+	    } catch (Exception e) {
+	        System.out.println("Payment failed: " + e.getMessage());
+	    }
 	}
 
 	/* ===================================================================== */
@@ -680,21 +737,27 @@ public class Client {
 	        return;
 	    }
 	    
-	    // Update cache to only show finished orders
 	    orderCache = finishedOrders;
 	    OrderDTO selectedOrder = selectOrder("Select order to ship:");
 	    
 	    if (selectedOrder != null) {
 	        try {
-	            // Ship the order (currently only creates shipment record)
+	            System.out.println("\n[...] Processing shipment...");
+	            
+	            // 1. Create shipment
 	            shipmentMgmt.shipOrder(selectedOrder.getId());
 	            
-	            System.out.println("\n[✓] Shipment record created successfully!");
-	            System.out.println("    Order ID: " + selectedOrder.getId());
+	            // 2. Create invoice and update order status
+	            orderMgmt.createInvoiceForShippedOrder(selectedOrder.getId());
 	            
+	            System.out.println("\n[✓] Order shipped successfully!");
+	            System.out.println("[✓] Invoice created:");
+	            System.out.printf("    - Invoice Amount: €%s%n", selectedOrder.getTotal());
+	            System.out.println("    - Status: Awaiting Payment");
+	            System.out.println("    - Customer has been notified");
 	            
 	        } catch (Exception e) {
-	            System.out.println("[✗] Failed to create shipment: " + e.getMessage());
+	            System.out.println("[✗] Failed to ship order: " + e.getMessage());
 	        }
 	    }
 	}
