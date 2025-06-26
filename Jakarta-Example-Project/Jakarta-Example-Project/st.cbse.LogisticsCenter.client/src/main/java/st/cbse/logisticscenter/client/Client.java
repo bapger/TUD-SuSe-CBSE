@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import st.cbse.crm.dto.OptionDTO;
 import st.cbse.crm.dto.OrderDTO;
+import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.crm.dto.PrintRequestDTO;
 import st.cbse.crm.dto.ShipmentItemDTO;
 import st.cbse.crm.customerComponent.interfaces.ICustomerMgmt;
@@ -202,12 +203,12 @@ public class Client {
 	private static boolean productionManagerMenu() throws Exception {
 		try {
 			System.out.println("\nProduction manager menu");
-			System.out.println("1  test");
+			System.out.println("1  List processes");
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
 				case "1":
-					System.out.println("yo B)");
+					listProcesses();
 					return true;
 				case "0":
 					return false;
@@ -574,6 +575,23 @@ public class Client {
 		}
 	}
 
+	/* ===================================================================== */
+	/* PRODUCTION MANAGER WORKFLOWS */
+	/* ===================================================================== */
+
+	private static void listProcesses() throws Exception {
+		List<ProcessDTO> processes = productionManagerMgmt.getAllProcesses();
+		if (processes.isEmpty()) {
+			System.out.println("No processes.");
+			return;
+		}
+
+		System.out.println("\n=== All Processes ===");
+		for (ProcessDTO p : processes) {
+			System.out.printf("ID = nique  Status = %s  Progress= %s",
+					p.getStatus(), p.getProgressPercentage());
+		}
+	}
 	/* ===================================================================== */
 	/* JNDI context helper */
 	/* ===================================================================== */

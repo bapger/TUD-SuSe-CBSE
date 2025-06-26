@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.ejb.Remote;
-import st.cbse.crm.dto.OrderDTO;
+import st.cbse.productionFacility.process.dto.ProcessDTO;
 
 @Remote
 public interface IProductionManagerMgmt {
 
     String loginProductionManager(String email, String password);
+
+    List<ProcessDTO> getAllProcesses();
 
 }

@@ -13,6 +13,7 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 
+import st.cbse.productionFacility.process.dto.ProcessDTO;
 import st.cbse.productionFacility.productionManagerComponent.data.ProductionManager;
 import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
@@ -47,5 +48,9 @@ public class ProductionManagerBean implements IProductionManagerMgmt {
         } catch (NoResultException ex) {
             throw new NoResultException();
         }
+    }
+
+    public List<ProcessDTO> getAllProcesses() {
+        return processService.getAllProcesses();
     }
 }
