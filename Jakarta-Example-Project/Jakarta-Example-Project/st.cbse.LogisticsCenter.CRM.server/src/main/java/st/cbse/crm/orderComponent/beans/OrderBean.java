@@ -276,8 +276,7 @@ public class OrderBean implements IOrderMgmt {
         Order order = em.find(Order.class, orderId);
         if (order == null)
             throw new IllegalArgumentException("Order not found: " + orderId);
-        order.setOrderStatus(OrderStatus.valueOf(status.toUpperCase(Locale.ROOT)));
-        	
+        order.setOrderStatus(OrderStatus.valueOf(status.toUpperCase(Locale.ROOT)));	
     }
 
 
