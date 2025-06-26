@@ -762,8 +762,8 @@ public class Client {
 		System.out.println("\n=== Items in Storage ===");
 		for (FinishedProductsDto item : items) {
 			storageCache.put(num, item);
-			System.out.printf("[%d] Request=%s  Order=%s%n",
-					num++, item.getPrintRequestId(), item.getOrderId());
+			System.out.printf("[%d] Request=%s%n",
+					num++, item.getPrintRequestId());
 		}
 	}
 
