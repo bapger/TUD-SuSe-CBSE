@@ -163,15 +163,14 @@ public class Client {
 	}
 
 	private static boolean managerMenu() throws Exception {
-//		try {
+		try {
 			System.out.println("\nManager menu");
 			System.out.println("1  List all orders");
 			System.out.println("2  Add note to request");
-			System.out.println("3  Mark request finished");
 			System.out.println("4  Ship order");
 			System.out.println("5  View finished items in storage");
-			System.out.println("6  Logout");
-			System.out.println("7  Send Order to the production");
+			System.out.println("6  Send Order to the production");
+			System.out.println("7  Logout");
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
@@ -190,11 +189,11 @@ public class Client {
 				case "5":
 					viewStorageWithNumbers();
 					return true;
-				case "6":
+				case "7":
 					loggedManager = null;
 					clearCache();
 					return true;
-				case "7":
+				case "6":
 					sendPrintToProdWithSelection();
 					return true;
 				case "0":
@@ -203,10 +202,10 @@ public class Client {
 					System.out.println("Invalid choice.");
 					return true;
 			}
-//		} catch (Exception e) {
-//			System.out.println("error " + e.getMessage());
-//			return true;
-//		}
+		} catch (Exception e) {
+			System.out.println("error " + e.getMessage());
+			return true;
+		}
 	}
 
 	private static boolean productionManagerMenu() throws Exception {
