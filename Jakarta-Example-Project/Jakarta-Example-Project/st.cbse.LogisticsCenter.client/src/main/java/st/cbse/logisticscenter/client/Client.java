@@ -216,6 +216,13 @@ public class Client {
 					return true;
 				case "2":
 
+					ProcessStatus[] status = ProcessStatus.values();
+					for (int i = 1; i < status.length + 1; i++) {
+						System.out.println(i + " : " + status[i - 1]);
+					}
+					String chosenStatus = status[Integer.parseInt(in.nextLine) - 1];
+					System.out.println("You chose : " + chosenStatus);
+					// getProcessesByStatus(chosenStatus);
 					return true;
 				case "3":
 					loggedProductionManager = null;
