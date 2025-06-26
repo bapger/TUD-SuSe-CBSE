@@ -12,11 +12,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import st.cbse.crm.dto.OrderDTO;
-import st.cbse.crm.dto.PrintRequestDTO;
-import st.cbse.crm.managerComponent.data.Manager;
-import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
-import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
+
+import st.cbse.productionFacility.productionManagerComponent.data.ProductionManager;
+import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 
 @Stateless
