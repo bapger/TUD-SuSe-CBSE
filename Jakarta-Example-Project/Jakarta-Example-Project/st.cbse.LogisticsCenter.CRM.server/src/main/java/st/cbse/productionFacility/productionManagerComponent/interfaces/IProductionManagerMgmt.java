@@ -1,0 +1,14 @@
+package st.cbse.productionFacility.productionManagerComponent.interfaces;
+
+import java.util.List;
+import java.util.UUID;
+
+import jakarta.ejb.Remote;
+import st.cbse.crm.dto.OrderDTO;
+
+@Remote
+public interface IProductionManagerMgmt {
+
+    String loginProductionManager(String email, String password);
+
+}

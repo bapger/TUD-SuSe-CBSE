@@ -1,0 +1,53 @@
+package st.cbse.productionFacility.productionManagerComponent.beans;
+
+import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import st.cbse.crm.dto.OrderDTO;
+import st.cbse.crm.dto.PrintRequestDTO;
+import st.cbse.crm.managerComponent.data.Manager;
+import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
+import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
+import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
+
+@Stateless
+public class ProductionManagerBean implements IProductionManagerMgmt {
+    @PersistenceContext
+    private EntityManager em;
+
+    @EJB
+    private IProcessMgmt processService;
+
+    // Initiate a production manager in the database when the server starts
+    @PostConstruct
+    public void initManager() {
+        if (em.find(Manager.class, "prodManager") == null) {
+            em.persist(new Manager("prodManager", "prodManager"));
+        }
+    }
+
+    @Override
+    public String loginProductionManager(String email, String password) {
+
+        try {
+            return em.createQuery(
+                    "SELECT pm.email FROM ProductionManager pm " +
+                            "WHERE pm.email = :mail AND pm.password = :pwd",
+                    String.class)
+                    .setParameter("mail", email)
+                    .setParameter("pwd", password)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new NoResultException();
+        }
+    }
+}

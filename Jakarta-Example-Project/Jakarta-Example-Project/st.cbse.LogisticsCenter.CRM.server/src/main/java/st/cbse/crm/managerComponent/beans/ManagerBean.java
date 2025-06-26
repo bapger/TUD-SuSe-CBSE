@@ -19,16 +19,17 @@ import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 
 @Stateless
-public class ManagerBean implements IManagerMgmt{
-    @PersistenceContext 
+public class ManagerBean implements IManagerMgmt {
+    @PersistenceContext
     private EntityManager em;
-    
+
     @EJB
     private IOrderMgmt orderService;
-    
+
     @EJB
     private IProcessMgmt processService;
-    
+
+    // Initiate a manager in the database when the server starts
     @PostConstruct
     public void initManager() {
         if (em.find(Manager.class, "admin") == null) {
@@ -39,48 +40,45 @@ public class ManagerBean implements IManagerMgmt{
     @Override
     public String loginManager(String email, String password) {
         try {
-        	return em.createQuery(
+            return em.createQuery(
                     "SELECT m.email FROM Manager m " +
-                    "WHERE m.email = :mail AND m.password = :pwd",
+                            "WHERE m.email = :mail AND m.password = :pwd",
                     String.class)
                     .setParameter("mail", email)
-                    .setParameter("pwd",  password)
-                    .getSingleResult();       // retourne directement la PK String
-        }
-        catch (NoResultException ex) {
+                    .setParameter("pwd", password)
+                    .getSingleResult(); // retourne directement la PK String
+        } catch (NoResultException ex) {
             throw new NoResultException();
         }
     }
-    
-    
+
     @Override
     public List<UUID> sendPrintToProd(UUID orderId) {
         try {
             OrderDTO orderDTO = orderService.getOrderDTO(orderId);
-            
+
             List<UUID> processIds = new ArrayList<UUID>();
-            
+
             for (PrintRequestDTO printRequestDTO : orderDTO.getPrintingRequests()) {
                 UUID processId = processService.createProcessFromPrintRequest(printRequestDTO);
                 processIds.add(processId);
-                
-                System.out.println("PrintingRequest " + printRequestDTO.getId() + 
-                                 " sent to production. Process ID: " + processId);
+
+                System.out.println("PrintingRequest " + printRequestDTO.getId() +
+                        " sent to production. Process ID: " + processId);
             }
-            
-            System.out.println("Order " + orderId + 
-                             " fully sent to production. Total processes created: " + processIds.size());
-            
+
+            System.out.println("Order " + orderId +
+                    " fully sent to production. Total processes created: " + processIds.size());
+
             return processIds;
-            
+
         } catch (NoResultException ex) {
             throw new NoResultException("Order not found: " + orderId);
         } catch (Exception ex) {
             throw new RuntimeException("Failed to send print requests to production: " + ex.getMessage(), ex);
         }
     }
-    
-    
+
     @Override
     public List<OrderDTO> listAllOrders() {
         /* Pas de logique métier ici : simple délégation */
@@ -101,6 +99,5 @@ public class ManagerBean implements IManagerMgmt{
                     "Unable to add note to request " + requestId + " : " + ex.getMessage(), ex);
         }
     }
-    
-    
+
 }
