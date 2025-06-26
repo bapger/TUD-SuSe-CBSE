@@ -18,18 +18,21 @@ import st.cbse.crm.managerComponent.interfaces.IManagerMgmt;
 import st.cbse.crm.orderComponent.data.OrderStatus;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
+import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
 
 public class Client {
 
 	/* --- EJB references -------------------------------------------------- */
 	private static ICustomerMgmt customerMgmt;
-	private static IManagerMgmt  managerMgmt;
-	private static IOrderMgmt    orderMgmt;
+	private static IManagerMgmt managerMgmt;
+	private static IProductionManagerMgmt productionManagerMgmt;
+	private static IOrderMgmt orderMgmt;
 	private static IShipmentMgmt shipmentMgmt;
 
 	/* --- Session state --------------------------------------------------- */
 	private static UUID loggedCustomer;
 	private static String loggedManager;
+	private static String loggedProductionManager;
 
 	/* --- Cache pour la sélection par numéro ------------------------------ */
 	private static Map<Integer, OrderDTO> orderCache = new HashMap<>();
@@ -45,23 +48,29 @@ public class Client {
 
 			customerMgmt = (ICustomerMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/CustomerBean!st.cbse.crm.customerComponent.interfaces.ICustomerMgmt");
-			managerMgmt  = (IManagerMgmt)  ctx.lookup(
+			managerMgmt = (IManagerMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/ManagerBean!st.cbse.crm.managerComponent.interfaces.IManagerMgmt");
-			orderMgmt    = (IOrderMgmt)    ctx.lookup(
+			// need testing
+			productionManagerMgmt = (IProductionManagerMgmt) ctx.lookup(
+					"ejb:/st.cbse.LogisticsCenter.CRM.server/ProductionManagerBean!st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt");
+			orderMgmt = (IOrderMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/OrderBean!st.cbse.crm.orderComponent.interfaces.IOrderMgmt");
 			shipmentMgmt = (IShipmentMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt");
 
 			System.out.println("=== Logistics System Client ===");
 
+			// very unaesthetic
 			boolean running = true;
 			while (running) {
-				if (loggedCustomer == null && loggedManager == null) {
+				if (loggedCustomer == null && loggedManager == null && loggedProductionManager == null) {
 					running = mainMenu();
 				} else if (loggedCustomer != null) {
 					running = customerMenu();
-				} else {
+				} else if (loggedManager != null) {
 					running = managerMenu();
+				} else if (loggedProductionManager != null) {
+					running = productionManagerMenu();
 				}
 			}
 			System.out.println("[✓] Session closed.");
@@ -71,7 +80,7 @@ public class Client {
 	}
 
 	/* ===================================================================== */
-	/*  MENUS                                                                */
+	/* MENUS */
 	/* ===================================================================== */
 
 	private static boolean mainMenu() throws Exception {
@@ -80,16 +89,29 @@ public class Client {
 			System.out.println("1  Register as customer");
 			System.out.println("2  Login as customer");
 			System.out.println("3  Login as manager");
+			System.out.println("4  Login as production manager");
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
-			case "1": registerCustomer();          return true;
-			case "2": loginCustomer();             return true;
-			case "3": loginManager();              return true;
-			case "0": return false;
-			default:  System.out.println("Invalid choice."); return true;
+				case "1":
+					registerCustomer();
+					return true;
+				case "2":
+					loginCustomer();
+					return true;
+				case "3":
+					loginManager();
+					return true;
+				case "4":
+					loginProductionManager();
+					return true;
+				case "0":
+					return false;
+				default:
+					System.out.println("Invalid choice.");
+					return true;
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("error : " + e.getMessage());
 			return true;
 		}
@@ -105,14 +127,26 @@ public class Client {
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
-			case "1": viewOrderHistory(loggedCustomer);          return true;
-			case "2": createNewOrder(loggedCustomer);            return true;
-			case "3": payWithSelection(loggedCustomer);          return true;
-			case "4": loggedCustomer = null; clearCache();       return true;
-			case "0": return false;
-			default:  System.out.println("Invalid choice."); return true;
+				case "1":
+					viewOrderHistory(loggedCustomer);
+					return true;
+				case "2":
+					createNewOrder(loggedCustomer);
+					return true;
+				case "3":
+					payWithSelection(loggedCustomer);
+					return true;
+				case "4":
+					loggedCustomer = null;
+					clearCache();
+					return true;
+				case "0":
+					return false;
+				default:
+					System.out.println("Invalid choice.");
+					return true;
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("error : " + e.getMessage());
 			return true;
 		}
@@ -131,24 +165,64 @@ public class Client {
 			System.out.println("0  Exit");
 			System.out.print("> ");
 			switch (in.nextLine()) {
-			case "1": listOrdersWithNumbers();                   return true;
-			case "2": addNoteWithSelection();                    return true;
-			case "3": markFinishedWithSelection();               return true;
-			case "4": shipOrderWithSelection();                  return true;
-			case "5": viewStorageWithNumbers();                  return true;
-			case "6": loggedManager = null; clearCache();        return true;
-			case "7": sendPrintToProdWithSelection();            return true;
-			case "0": return false;
-			default:  System.out.println("Invalid choice."); return true;
+				case "1":
+					listOrdersWithNumbers();
+					return true;
+				case "2":
+					addNoteWithSelection();
+					return true;
+				case "3":
+					markFinishedWithSelection();
+					return true;
+				case "4":
+					shipOrderWithSelection();
+					return true;
+				case "5":
+					viewStorageWithNumbers();
+					return true;
+				case "6":
+					loggedManager = null;
+					clearCache();
+					return true;
+				case "7":
+					sendPrintToProdWithSelection();
+					return true;
+				case "0":
+					return false;
+				default:
+					System.out.println("Invalid choice.");
+					return true;
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("error " + e.getMessage());
 			return true;
 		}
 	}
 
+	private static boolean productionManagerMenu() throws Exception {
+		try {
+			System.out.println("\nProduction manager menu");
+			System.out.println("1  test");
+			System.out.println("0  Exit");
+			System.out.print("> ");
+			switch (in.nextLine()) {
+				case "1":
+					System.out.println("yo B)");
+					return true;
+				case "0":
+					return false;
+				default:
+					System.out.println("Invalid choice.");
+					return true;
+			}
+		} catch (Exception e) {
+			System.out.println("error : " + e.getMessage());
+			return true;
+		}
+	}
+
 	/* ===================================================================== */
-	/*  HELPER METHODS                                                       */
+	/* HELPER METHODS */
 	/* ===================================================================== */
 
 	private static void clearCache() {
@@ -168,7 +242,8 @@ public class Client {
 
 		try {
 			int choice = Integer.parseInt(in.nextLine());
-			if (choice == 0) return null;
+			if (choice == 0)
+				return null;
 
 			OrderDTO selected = orderCache.get(choice);
 			if (selected == null) {
@@ -192,7 +267,8 @@ public class Client {
 
 		try {
 			int choice = Integer.parseInt(in.nextLine());
-			if (choice == 0) return null;
+			if (choice == 0)
+				return null;
 
 			PrintRequestDTO selected = requestCache.get(choice);
 			if (selected == null) {
@@ -206,26 +282,31 @@ public class Client {
 	}
 
 	/* ===================================================================== */
-	/*  AUTH / REGISTRATION                                                  */
+	/* AUTH / REGISTRATION */
 	/* ===================================================================== */
 
 	private static void registerCustomer() throws Exception {
 		System.out.println("\n[Register customer]");
-		System.out.print("Full name : "); String name = in.nextLine();
-		System.out.print("E-mail    : "); String email = in.nextLine();
-		System.out.print("Password  : "); String pw = in.nextLine();
+		System.out.print("Full name : ");
+		String name = in.nextLine();
+		System.out.print("E-mail    : ");
+		String email = in.nextLine();
+		System.out.print("Password  : ");
+		String pw = in.nextLine();
 		loggedCustomer = customerMgmt.registerCustomer(name, email, pw);
 		System.out.println("Registered. Your id: " + loggedCustomer);
 	}
 
 	private static void loginCustomer() throws Exception {
 		System.out.println("\n[Customer login]");
-		System.out.print("E-mail   : "); String email = in.nextLine();
-		System.out.print("Password : "); String pw    = in.nextLine();
+		System.out.print("E-mail   : ");
+		String email = in.nextLine();
+		System.out.print("Password : ");
+		String pw = in.nextLine();
 		try {
 			loggedCustomer = customerMgmt.loginCustomer(email, pw);
 			System.out.println("logged as a Customer !");
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			System.out.println("bad credentials");
 			loggedCustomer = null;
 		}
@@ -233,12 +314,29 @@ public class Client {
 
 	private static void loginManager() throws Exception {
 		System.out.println("\n[Manager login]");
-		System.out.print("E-mail   : "); String email = in.nextLine();
-		System.out.print("Password : "); String pw    = in.nextLine();
+		System.out.print("E-mail   : ");
+		String email = in.nextLine();
+		System.out.print("Password : ");
+		String pw = in.nextLine();
 		try {
 			loggedManager = managerMgmt.loginManager(email, pw);
 			System.out.println("Logged in as manager.");
-		} catch(Exception ex) {
+		} catch (Exception ex) {
+			System.out.println("bad credentials");
+			loggedManager = null;
+		}
+	}
+
+	private static void loginProductionManager() throws Exception {
+		System.out.println("\n[Production manager login]");
+		System.out.print("E-mail   : ");
+		String email = in.nextLine();
+		System.out.print("Password : ");
+		String pw = in.nextLine();
+		try {
+			loggedProductionManager = productionManagerMgmt.loginProductionManager(email, pw);
+			System.out.println("Logged in as production manager.");
+		} catch (Exception ex) {
 			System.out.println("bad credentials");
 			loggedManager = null;
 		}
@@ -267,14 +365,14 @@ public class Client {
 			for (PrintRequestDTO pr : o.getPrintingRequests()) {
 				requestCache.put(globalRequestNum, pr);
 
-				System.out.printf("    [Req %d] STL=%s%n", 
+				System.out.printf("    [Req %d] STL=%s%n",
 						globalRequestNum++, pr.getStlPath());
 
 				if (pr.getNote() != null && !pr.getNote().isBlank())
 					System.out.println("          Note: " + pr.getNote());
 
 				for (OptionDTO op : pr.getOptions()) {
-					System.out.printf("          %-15s  €%s%n", 
+					System.out.printf("          %-15s  €%s%n",
 							op.getType(), op.getPrice());
 				}
 			}
@@ -299,31 +397,32 @@ public class Client {
 			while (moreOpt) {
 				System.out.println("Add option: 1-Paint 2-Smooth 3-Engrave 0-Done");
 				switch (in.nextLine()) {
-				case "1" : {
-					System.out.print("Colour: ");
-					String colour = in.nextLine();
-					System.out.print("Layer count: ");
-					int layers = Integer.parseInt(in.nextLine());
-					orderMgmt.addPaintJobOption(requestId, colour, layers);
-					break;
-				}
-				case "2" : {
-					System.out.print("Granularity: ");
-					String g = in.nextLine();
-					orderMgmt.addSmoothingOption(requestId, g);
-					break;
-				}
-				case "3" : {
-					System.out.print("Text  : ");
-					String text = in.nextLine();
-					System.out.print("Font  : ");
-					String font = in.nextLine();
-					System.out.print("Image path (enter to skip): ");
-					String img = in.nextLine();
-					orderMgmt.addEngravingOption(requestId, text, font, img);
-					break;
-				}
-				default : moreOpt = false;
+					case "1": {
+						System.out.print("Colour: ");
+						String colour = in.nextLine();
+						System.out.print("Layer count: ");
+						int layers = Integer.parseInt(in.nextLine());
+						orderMgmt.addPaintJobOption(requestId, colour, layers);
+						break;
+					}
+					case "2": {
+						System.out.print("Granularity: ");
+						String g = in.nextLine();
+						orderMgmt.addSmoothingOption(requestId, g);
+						break;
+					}
+					case "3": {
+						System.out.print("Text  : ");
+						String text = in.nextLine();
+						System.out.print("Font  : ");
+						String font = in.nextLine();
+						System.out.print("Image path (enter to skip): ");
+						String img = in.nextLine();
+						orderMgmt.addEngravingOption(requestId, text, font, img);
+						break;
+					}
+					default:
+						moreOpt = false;
 				}
 			}
 			System.out.print("Add another print-request? (y/N) ");
@@ -364,19 +463,20 @@ public class Client {
 				orderMgmt.pay(selectedOrder.getId(), ref);
 				System.out.println("[✓] Payment booked.");
 			}
-		} catch(Exception e) {            System.out.println("Payment failed: " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("Payment failed: " + e.getMessage());
 		}
 	}
 
 	/* ===================================================================== */
-	/*  MANAGER WORKFLOWS                                                    */
+	/* MANAGER WORKFLOWS */
 	/* ===================================================================== */
 
 	private static void listOrdersWithNumbers() throws Exception {
 		List<OrderDTO> orders = managerMgmt.listAllOrders();
-		if (orders.isEmpty()) { 
-			System.out.println("No orders."); 
-			return; 
+		if (orders.isEmpty()) {
+			System.out.println("No orders.");
+			return;
 		}
 
 		orderCache.clear();
@@ -393,7 +493,8 @@ public class Client {
 	private static void addNoteWithSelection() throws Exception {
 		listOrdersWithNumbers();
 		OrderDTO selectedOrder = selectOrder("Select order containing the request:");
-		if (selectedOrder == null) return;
+		if (selectedOrder == null)
+			return;
 
 		// Afficher les requests de cette commande
 		requestCache.clear();
@@ -419,7 +520,8 @@ public class Client {
 	private static void markFinishedWithSelection() throws Exception {
 		listOrdersWithNumbers();
 		OrderDTO selectedOrder = selectOrder("Select order containing the request:");
-		if (selectedOrder == null) return;
+		if (selectedOrder == null)
+			return;
 
 		// Afficher les requests de cette commande
 		requestCache.clear();
@@ -444,7 +546,7 @@ public class Client {
 		if (selectedOrder != null) {
 			managerMgmt.sendPrintToProd(selectedOrder.getId());
 			System.out.println("Order sent to production.");
-		}else{
+		} else {
 			System.out.println("order not completed");
 		}
 	}
@@ -456,9 +558,9 @@ public class Client {
 
 	private static void viewStorageWithNumbers() throws Exception {
 		List<ShipmentItemDTO> items = shipmentMgmt.itemsInStorage();
-		if (items.isEmpty()) { 
-			System.out.println("Storage empty."); 
-			return; 
+		if (items.isEmpty()) {
+			System.out.println("Storage empty.");
+			return;
 		}
 
 		storageCache.clear();
@@ -473,7 +575,7 @@ public class Client {
 	}
 
 	/* ===================================================================== */
-	/*  JNDI context helper                                                  */
+	/* JNDI context helper */
 	/* ===================================================================== */
 
 	private static InitialContext getContext() throws NamingException {
