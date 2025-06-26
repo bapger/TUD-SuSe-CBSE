@@ -138,27 +138,24 @@ public class OrderBean implements IOrderMgmt {
 	/* ============================================================= */
 	@Override
 	public List<OrderDTO> getOrdersByCustomer(UUID customerId) {
+	    List<Order> orders = em.createQuery(
+	            "SELECT DISTINCT o " +
+	            "FROM Order o " +
+	            "LEFT JOIN FETCH o.printingRequests " +
+	            "WHERE o.customerId = :cid " +
+	            "ORDER BY o.creationDate DESC", Order.class)
+	            .setParameter("cid", customerId)
+	            .getResultList();
 
-		// --- build entity graph ------------------------------------------------
-		EntityGraph<Order> g = em.createEntityGraph(Order.class);
-		Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
-		pr.addSubgraph("options");
+	    for (Order order : orders) {
+	        for (PrintingRequest pr : order.getPrintingRequests()) {
+	            pr.getOptions().size(); 
+	        }
+	    }
 
-		// --- run JPQL query ----------------------------------------------------
-		List<Order> orders = em.createQuery(
-				"SELECT DISTINCT o " +
-						"FROM   Order o " +
-						"WHERE  o.customerId = :cid " +
-						"ORDER  BY o.creationDate DESC", Order.class)
-				.setParameter("cid", customerId)
-				.setHint("jakarta.persistence.fetchgraph", g)
-				.getResultList();
-
-		// --- map entity graph → DTO tree --------------------------------------
-		return orders.stream()
-				.map(OrderDTO::of)
-				// use .toList() on JDK 16+, otherwise Collectors.toList()
-				.collect(java.util.stream.Collectors.toList());
+	    return orders.stream()
+	            .map(OrderDTO::of)
+	            .collect(java.util.stream.Collectors.toList());
 	}
 
 	/* ================================================================= */
