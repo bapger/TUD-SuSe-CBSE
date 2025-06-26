@@ -67,7 +67,7 @@ public class Client {
 			shipmentMgmt = (IShipmentMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt");
 			storageMgmt = (IStorageMgmt) ctx.lookup(
-				    "ejb:/st.cbse.LogisticsCenter.CRM.server/StorageBean!st.cbse.productionFacility.storage.interfaces.IStorageMgmt");
+					"ejb:/st.cbse.LogisticsCenter.CRM.server/StorageBean!st.cbse.productionFacility.storage.interfaces.IStorageMgmt");
 			System.out.println("=== Logistics System Client ===");
 
 			// very unaesthetic
@@ -655,7 +655,7 @@ public class Client {
 
 		System.out.println("\n=== All Processes ===");
 		for (ProcessDTO p : processes) {
-			System.out.printf("ID = nique  Status = %s  Progress= %s",
+			System.out.printf("ID = "+p.getId()+" Status = %s  Progress= %s\n",
 					p.getStatus(), p.getProgressPercentage());
 		}
 	}
