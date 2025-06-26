@@ -2,11 +2,11 @@ package st.cbse.productionFacility.storage.interfaces;
 
 import java.util.List;
 import java.util.UUID;
-import jakarta.ejb.Local;
+import jakarta.ejb.Remote;
 import st.cbse.productionFacility.storage.dto.FinishedProductsDto;
 import st.cbse.productionFacility.storage.dto.ItemInfo;
 
-@Local
+@Remote
 public interface IStorageMgmt {
     
     UUID createUnfinishedProduct(UUID processId, UUID printRequestId, String stlPath);

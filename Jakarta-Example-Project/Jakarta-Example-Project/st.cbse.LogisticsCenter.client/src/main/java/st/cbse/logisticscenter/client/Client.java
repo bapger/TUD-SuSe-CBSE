@@ -23,6 +23,8 @@ import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
 import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
 import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
+import st.cbse.productionFacility.storage.dto.FinishedProductsDto;
+import st.cbse.productionFacility.storage.interfaces.IStorageMgmt;
 
 public class Client {
 
@@ -33,6 +35,7 @@ public class Client {
 	private static IOrderMgmt orderMgmt;
 	private static IProcessMgmt processMgmt;
 	private static IShipmentMgmt shipmentMgmt;
+	private static IStorageMgmt storageMgmt;
 
 	/* --- Session state --------------------------------------------------- */
 	private static UUID loggedCustomer;
@@ -42,7 +45,7 @@ public class Client {
 	/* --- Cache pour la sélection par numéro ------------------------------ */
 	private static Map<Integer, OrderDTO> orderCache = new HashMap<>();
 	private static Map<Integer, PrintRequestDTO> requestCache = new HashMap<>();
-	private static Map<Integer, ShipmentItemDTO> storageCache = new HashMap<>();
+	private static Map<Integer, FinishedProductsDto> storageCache = new HashMap<>();
 
 	private static final Scanner in = new Scanner(System.in);
 
@@ -63,7 +66,8 @@ public class Client {
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/ProcessBean!st.cbse.productionFacility.process.interfaces.IProcessMgmt");
 			shipmentMgmt = (IShipmentMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt");
-
+			storageMgmt = (IStorageMgmt) ctx.lookup(
+				    "ejb:/st.cbse.LogisticsCenter.CRM.server/StorageBean!st.cbse.productionFacility.storage.interfaces.IStorageMgmt");
 			System.out.println("=== Logistics System Client ===");
 
 			// very unaesthetic
@@ -159,7 +163,7 @@ public class Client {
 	}
 
 	private static boolean managerMenu() throws Exception {
-		try {
+//		try {
 			System.out.println("\nManager menu");
 			System.out.println("1  List all orders");
 			System.out.println("2  Add note to request");
@@ -199,10 +203,10 @@ public class Client {
 					System.out.println("Invalid choice.");
 					return true;
 			}
-		} catch (Exception e) {
-			System.out.println("error " + e.getMessage());
-			return true;
-		}
+//		} catch (Exception e) {
+//			System.out.println("error " + e.getMessage());
+//			return true;
+//		}
 	}
 
 	private static boolean productionManagerMenu() throws Exception {
@@ -622,7 +626,7 @@ public class Client {
 	}
 
 	private static void viewStorageWithNumbers() throws Exception {
-		List<ShipmentItemDTO> items = shipmentMgmt.itemsInStorage();
+		List<FinishedProductsDto> items = storageMgmt.getAllFinishedProducts();
 		if (items.isEmpty()) {
 			System.out.println("Storage empty.");
 			return;
@@ -632,7 +636,7 @@ public class Client {
 		int num = 1;
 
 		System.out.println("\n=== Items in Storage ===");
-		for (ShipmentItemDTO item : items) {
+		for (FinishedProductsDto item : items) {
 			storageCache.put(num, item);
 			System.out.printf("[%d] Request=%s  Order=%s%n",
 					num++, item.getPrintRequestId(), item.getOrderId());
