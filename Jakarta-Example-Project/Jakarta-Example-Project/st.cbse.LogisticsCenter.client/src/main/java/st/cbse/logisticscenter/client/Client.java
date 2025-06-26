@@ -21,7 +21,7 @@ import st.cbse.crm.orderComponent.data.OrderStatus;
 import st.cbse.productionFacility.process.data.enums.ProcessStatus;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.productionFacility.process.interfaces.IProcessMgmt;
-import st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt;
+import st.cbse.shipment.interfaces.IShipmentMgmt;
 import st.cbse.productionFacility.productionManagerComponent.interfaces.IProductionManagerMgmt;
 import st.cbse.productionFacility.storage.dto.FinishedProductsDto;
 import st.cbse.productionFacility.storage.interfaces.IStorageMgmt;
@@ -65,7 +65,7 @@ public class Client {
 			processMgmt = (IProcessMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/ProcessBean!st.cbse.productionFacility.process.interfaces.IProcessMgmt");
 			shipmentMgmt = (IShipmentMgmt) ctx.lookup(
-					"ejb:/st.cbse.LogisticsCenter.server/ShipmentBean!st.cbse.crm.shipmentComponent.interfaces.IShipmentMgmt");
+					"ejb:/st.cbse.LogisticsCenter.CRM.server/ShipmentBean!st.cbse.shipment.interfaces.IShipmentMgmt");
 			storageMgmt = (IStorageMgmt) ctx.lookup(
 					"ejb:/st.cbse.LogisticsCenter.CRM.server/StorageBean!st.cbse.productionFacility.storage.interfaces.IStorageMgmt");
 			System.out.println("=== Logistics System Client ===");
@@ -655,8 +655,48 @@ public class Client {
 	}
 
 	private static void shipOrderWithSelection() throws Exception {
-		// TODO: Implémenter avec ShipmentDTO si nécessaire
-		System.out.println("Ship order - Not implemented yet");
+	    // Display all orders first
+	    listOrdersWithNumbers();
+	    
+	    // Filter to show only FINISHED orders
+	    Map<Integer, OrderDTO> finishedOrders = new HashMap<>();
+	    int num = 1;
+	    
+	    System.out.println("\n=== Orders Ready to Ship ===");
+	    boolean foundFinished = false;
+	    
+	    for (Map.Entry<Integer, OrderDTO> entry : orderCache.entrySet()) {
+	        OrderDTO order = entry.getValue();
+	        if (OrderStatus.FINISHED.toString().equals(order.getStatus())) {
+	            finishedOrders.put(num, order);
+	            System.out.printf("[%d] Order ID: %s | Customer: %s | Total: €%s%n",
+	                    num++, order.getId(), order.getCustomer(), order.getTotal());
+	            foundFinished = true;
+	        }
+	    }
+	    
+	    if (!foundFinished) {
+	        System.out.println("\n[!] No orders are ready to ship (must be FINISHED status).");
+	        return;
+	    }
+	    
+	    // Update cache to only show finished orders
+	    orderCache = finishedOrders;
+	    OrderDTO selectedOrder = selectOrder("Select order to ship:");
+	    
+	    if (selectedOrder != null) {
+	        try {
+	            // Ship the order (currently only creates shipment record)
+	            shipmentMgmt.shipOrder(selectedOrder.getId());
+	            
+	            System.out.println("\n[✓] Shipment record created successfully!");
+	            System.out.println("    Order ID: " + selectedOrder.getId());
+	            
+	            
+	        } catch (Exception e) {
+	            System.out.println("[✗] Failed to create shipment: " + e.getMessage());
+	        }
+	    }
 	}
 
 	private static void viewStorageWithNumbers() throws Exception {

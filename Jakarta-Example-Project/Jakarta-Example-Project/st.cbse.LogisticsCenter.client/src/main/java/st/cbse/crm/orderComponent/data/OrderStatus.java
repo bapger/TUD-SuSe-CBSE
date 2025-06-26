@@ -5,5 +5,5 @@ public enum OrderStatus {
     COMPLETED,
     VALIDATED,
     SHIPPED,
-    REJECTED
+    REJECTED, FINISHED
 }
