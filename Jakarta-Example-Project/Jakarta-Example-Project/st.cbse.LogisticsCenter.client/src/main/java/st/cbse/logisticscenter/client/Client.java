@@ -521,21 +521,6 @@ public class Client {
 	        
 	        System.out.println("\n=== Payment Options ===");
 	        
-	        System.out.println("\n-- Unpaid Orders (Pre-shipping) --");
-	        boolean hasUnpaidOrders = false;
-	        for (OrderDTO order : orders) {
-	            if ("PENDING".equals(order.getStatus()) || "CREATED".equals(order.getStatus()) || "COMPLETED".equals(order.getStatus())) {
-	                payableItems.put(num, order);
-	                System.out.printf("[%d] Order %s - €%s (Status: %s)%n",
-	                        num++, order.getId().toString().substring(0, 8), 
-	                        order.getTotal(), order.getStatus());
-	                hasUnpaidOrders = true;
-	            }
-	        }
-	        if (!hasUnpaidOrders) {
-	            System.out.println("  None");
-	        }
-	        
 	        System.out.println("\n-- Unpaid Invoices (Post-shipping) --");
 	        boolean hasUnpaidInvoices = false;
 	        for (OrderDTO order : orders) {
