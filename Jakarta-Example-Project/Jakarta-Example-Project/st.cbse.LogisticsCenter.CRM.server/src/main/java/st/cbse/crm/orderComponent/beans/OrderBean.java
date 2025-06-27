@@ -220,20 +220,23 @@ public class OrderBean implements IOrderMgmt {
 
 	@Override
 	public List<OrderDTO> fetchAllOrderDTOs() {
-		EntityGraph<Order> g = em.createEntityGraph(Order.class);
-		Subgraph<PrintingRequest> pr = g.addSubgraph("printingRequests");
-		pr.addSubgraph("options");
-		List<Order> orders = em.createQuery(
-				"SELECT DISTINCT o " +
-						"FROM   Order o " +
-						"ORDER  BY o.creationDate DESC",
-						Order.class)
-				.setHint("jakarta.persistence.fetchgraph", g)
-				.getResultList();
+	    List<Order> orders = em.createQuery(
+	            "SELECT DISTINCT o " +
+	            "FROM Order o " +
+	            "LEFT JOIN FETCH o.printingRequests " +
+	            "ORDER BY o.creationDate DESC", Order.class)
+	            .getResultList();
 
-		return orders.stream()
-				.map(OrderDTO::of)
-				.collect(java.util.stream.Collectors.toList());
+	    // Forcer le chargement des options
+	    for (Order order : orders) {
+	        for (PrintingRequest pr : order.getPrintingRequests()) {
+	            pr.getOptions().size(); 
+	        }
+	    }
+
+	    return orders.stream()
+	            .map(OrderDTO::of)
+	            .collect(java.util.stream.Collectors.toList());
 	}
 
 	@Override
