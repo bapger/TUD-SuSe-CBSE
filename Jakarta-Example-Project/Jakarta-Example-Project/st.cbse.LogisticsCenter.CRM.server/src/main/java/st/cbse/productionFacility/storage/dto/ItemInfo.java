@@ -6,9 +6,12 @@ import java.util.UUID;
 
 public class ItemInfo implements Serializable {
     
-    private static final long serialVersionUID = 1L;
     
-    private UUID id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5936628697602512457L;
+	private UUID id;
     private UUID processId;
     private UUID printRequestId;
     private String currentLocation;

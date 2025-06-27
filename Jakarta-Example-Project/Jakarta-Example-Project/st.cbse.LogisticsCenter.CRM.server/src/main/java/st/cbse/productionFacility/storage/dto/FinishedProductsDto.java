@@ -6,9 +6,12 @@ import java.util.UUID;
 
 public class FinishedProductsDto implements Serializable {
     
-    private static final long serialVersionUID = 1L;
     
-    private UUID id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7589681808120636490L;
+	private UUID id;
     private UUID processId;
     private UUID printRequestId;
     private UUID orderId;

@@ -2,12 +2,19 @@ package st.cbse.productionFacility.process.dto;
 
 import st.cbse.productionFacility.process.data.Process;
 import st.cbse.productionFacility.process.data.ProcessStep;
+
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ProcessMapper {
+public class ProcessMapper implements Serializable{
     
-    private ProcessMapper() {}
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2535321210613113194L;
+
+	private ProcessMapper() {}
     
     public static ProcessDTO toDTO(Process process) {
         if (process == null) return null;
