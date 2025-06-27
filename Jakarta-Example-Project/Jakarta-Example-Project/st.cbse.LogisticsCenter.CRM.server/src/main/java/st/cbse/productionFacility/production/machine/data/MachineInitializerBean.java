@@ -67,7 +67,7 @@ public class MachineInitializerBean {
     private void createSmoothingMachines() {
         LOG.info("Creating Smoothing Machines...");
         
-        for (int i = 1; i <= 2; i++) {
+        for (int i = 1; i <= 5; i++) {
             SmoothingMachine machine = new SmoothingMachine(true, true);
             machine.setStatus(MachineStatus.AVAILABLE);
             em.persist(machine);

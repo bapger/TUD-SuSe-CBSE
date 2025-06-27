@@ -248,7 +248,7 @@ public class Client {
 					chosenProcess = processes.get(Integer.parseInt(in.nextLine()) - 1);
 
 					System.out.println("You have chosen : " + chosenProcess.getId());
-					resumeProcess(chosenProcess);
+					pauseProcess(chosenProcess);
 					return true;
 				case "4":
 					processes = processMgmt.getProcessesByStatus("PAUSED");
