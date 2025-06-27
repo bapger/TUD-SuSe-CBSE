@@ -396,7 +396,17 @@ public class ProcessBean implements IProcessMgmt {
         ProcessStep currentStep = process.getCurrentStep();
         if (currentStep != null) {
             if (currentStep.getAssignedMachineId() != null) {
-                resumeMachineForProcess(currentStep.getAssignedMachineId(), processId);
+                MachineDTO machineDTO = machineMgmt.getMachineDTO(currentStep.getAssignedMachineId());
+                if (machineDTO != null && machineDTO.getInputProcessId() != null) {
+                    LOG.info("Machine " + currentStep.getAssignedMachineId() + 
+                            " has item in input - executing machine");
+                    machineMgmt.resumeMachine(currentStep.getAssignedMachineId(), processId);
+                    if (machineMgmt.programMachine(currentStep.getAssignedMachineId())) {
+                        machineMgmt.executeMachine(currentStep.getAssignedMachineId(), processId);
+                    }
+                } else {
+                    scheduleNextStepProcessing(processId);
+                }
             } else {
                 scheduleNextStepProcessing(processId);
             }
@@ -408,10 +418,6 @@ public class ProcessBean implements IProcessMgmt {
 
     private void pauseMachineForProcess(UUID machineId, UUID processId) {
         machineMgmt.pauseMachine(machineId);
-    }
-
-    private void resumeMachineForProcess(UUID machineId, UUID processId) {
-        machineMgmt.resumeMachine(machineId, processId);
     }
     
     @Override

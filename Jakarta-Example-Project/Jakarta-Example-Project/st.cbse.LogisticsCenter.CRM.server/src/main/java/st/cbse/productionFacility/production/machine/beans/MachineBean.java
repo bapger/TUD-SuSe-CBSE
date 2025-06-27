@@ -92,15 +92,12 @@ public class MachineBean implements IMachineMgmt {
 	    }
 	    
 	    if (machine.getActiveProcessId() != null) {
-	        machine.setStatus(MachineStatus.ACTIVE);
-	        long remainingTime = machine.getProcessingTimeMillis() / 2;
-	        timerService.createSingleActionTimer(remainingTime, new TimerConfig(
-	            new MachineCompletionInfo(machine.getActiveProcessId(), machineId), false));
+	        return executeMachine(machineId, processId);
 	    } else {
 	        machine.setStatus(MachineStatus.RESERVED);
+	        em.merge(machine);
 	    }
 	    
-	    em.merge(machine);
 	    LOG.info("Machine " + machineId + " resumed");
 	    return true;
 	}
@@ -126,12 +123,12 @@ public class MachineBean implements IMachineMgmt {
 	    }
 
 	    Machine machine = em.find(Machine.class, machineId);
-	    if (machine == null || machine.getStatus() != MachineStatus.RESERVED) {
-	        LOG.warning("Cannot execute machine " + machineId + " - machine null or not reserved");
+	    if (machine == null || (machine.getStatus() != MachineStatus.RESERVED && machine.getStatus() != MachineStatus.PAUSED)) {
+	        LOG.warning("Cannot execute machine " + machineId + " - machine null or not in correct state");
 	        return false;
 	    }
 	    
-	    if (machine.getActiveProcessId() != null) {
+	    if (machine.getActiveProcessId() != null && machine.getStatus() != MachineStatus.PAUSED) {
 	        LOG.warning("Machine " + machineId + " already has active process: " + machine.getActiveProcessId());
 	        return false;
 	    }
@@ -140,7 +137,7 @@ public class MachineBean implements IMachineMgmt {
 	    
 	    UUID itemId = null;
 	    
-	    if (machine.getClass().getSimpleName().equals("PrintingMachine")) {
+	    if (machine.getClass().getSimpleName().equals("PrintingMachine") && machine.getActiveProcessId() == null) {
 	        LOG.info("PrintingMachine detected - creating UnfinishedProduct");
 	        if (processDTO != null) {
 	            itemId = storageMgmt.createUnfinishedProduct(
@@ -152,14 +149,19 @@ public class MachineBean implements IMachineMgmt {
 	        }
 	    }
 	    
-	    if (!machine.hasInput()) {
-	        machine.setActiveProcessId(processId);
+	    if (machine.getStatus() == MachineStatus.PAUSED && machine.getActiveProcessId() != null) {
+	        LOG.info("Resuming machine " + machineId + " processing");
 	        machine.setStatus(MachineStatus.ACTIVE);
 	    } else {
-	        boolean started = machine.startProcessing();
-	        if (!started) {
-	            LOG.warning("Failed to start processing on machine " + machineId);
-	            return false;
+	        if (!machine.hasInput()) {
+	            machine.setActiveProcessId(processId);
+	            machine.setStatus(MachineStatus.ACTIVE);
+	        } else {
+	            boolean started = machine.startProcessing();
+	            if (!started) {
+	                LOG.warning("Failed to start processing on machine " + machineId);
+	                return false;
+	            }
 	        }
 	    }
 	    
@@ -168,18 +170,47 @@ public class MachineBean implements IMachineMgmt {
 	    
 	    LOG.info("Machine " + machineId + " processing - " + machine.getActionMessage());
 	    
-	    try {
-	        Thread.sleep(machine.getProcessingTimeMillis());
-	    } catch (InterruptedException e) {
-	        LOG.warning("Machine processing interrupted: " + e.getMessage());
-	        Thread.currentThread().interrupt();
-	        return false;
+	    long processingTime = machine.getProcessingTimeMillis();
+	    timerService.createSingleActionTimer(processingTime, new TimerConfig(
+	        new MachineProcessingInfo(processId, machineId, itemId), false));
+	    
+	    return true;
+	}
+
+	@Timeout
+	public void handleMachineTimer(Timer timer) {
+	    Object info = timer.getInfo();
+	    
+	    if (info instanceof MachineProcessingInfo) {
+	        MachineProcessingInfo processingInfo = (MachineProcessingInfo) info;
+	        finishMachineProcessing(processingInfo.getMachineId(), processingInfo.getProcessId(), processingInfo.getItemId());
+	    } else if (info instanceof MachineCompletionInfo) {
+	        MachineCompletionInfo completionInfo = (MachineCompletionInfo) info;
+	        LOG.info("Notifying process " + completionInfo.getProcessId() + 
+	                " that machine " + completionInfo.getMachineId() + " completed");
+	        processMgmt.notifyStepCompleted(completionInfo.getProcessId(), completionInfo.getMachineId());
+	    }
+	}
+
+	private void finishMachineProcessing(UUID machineId, UUID processId, UUID itemId) {
+	    Machine machine = em.find(Machine.class, machineId);
+	    if (machine == null) {
+	        LOG.warning("Machine not found: " + machineId);
+	        return;
+	    }
+	    
+	    ProcessDTO processDTO = processMgmt.getProcess(processId);
+	    if (processDTO != null && "PAUSED".equals(processDTO.getStatus())) {
+	        LOG.info("Process is paused - machine " + machineId + " will not finish processing");
+	        machine.setStatus(MachineStatus.PAUSED);
+	        em.merge(machine);
+	        return;
 	    }
 	    
 	    boolean finished = machine.finishProcessing();
 	    if (!finished) {
 	        LOG.warning("Failed to finish processing on machine " + machineId);
-	        return false;
+	        return;
 	    }
 	    
 	    if (itemId != null) {
@@ -192,36 +223,7 @@ public class MachineBean implements IMachineMgmt {
 	    
 	    LOG.info("Machine " + machineId + " completed - outputProcessId: " + machine.getOutputProcessId());
 	    
-	    if (machine.getActiveProcessId() == null && processId != null && processMgmt != null) {
-	        timerService.createSingleActionTimer(500, new TimerConfig(
-	            new MachineCompletionInfo(processId, machineId), false));
-	    }
-	    
-	    return true;
-	}
-
-	@Timeout
-	public void handleMachineCompletion(Timer timer) {
-		MachineCompletionInfo info = (MachineCompletionInfo) timer.getInfo();
-		if (info != null) {
-			LOG.info("Notifying process " + info.getProcessId() + 
-					" that machine " + info.getMachineId() + " completed");
-			processMgmt.notifyStepCompleted(info.getProcessId(), info.getMachineId());
-		}
-	}
-
-	private static class MachineCompletionInfo implements Serializable {
-		private static final long serialVersionUID = 1L;
-		private final UUID processId;
-		private final UUID machineId;
-
-		public MachineCompletionInfo(UUID processId, UUID machineId) {
-			this.processId = processId;
-			this.machineId = machineId;
-		}
-
-		public UUID getProcessId() { return processId; }
-		public UUID getMachineId() { return machineId; }
+	    processMgmt.notifyStepCompleted(processId, machineId);
 	}
 
 	@Override
@@ -245,8 +247,6 @@ public class MachineBean implements IMachineMgmt {
 	public Machine getMachine(UUID machineId) {
 		return em.find(Machine.class, machineId);
 	}
-
-
 
 	@Override
 	public boolean reserveMachine(UUID machineId, UUID processId) {
@@ -394,4 +394,34 @@ public class MachineBean implements IMachineMgmt {
 		return dto;
 	}
 
+	private static class MachineCompletionInfo implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private final UUID processId;
+		private final UUID machineId;
+
+		public MachineCompletionInfo(UUID processId, UUID machineId) {
+			this.processId = processId;
+			this.machineId = machineId;
+		}
+
+		public UUID getProcessId() { return processId; }
+		public UUID getMachineId() { return machineId; }
+	}
+
+	private static class MachineProcessingInfo implements Serializable {
+	    private static final long serialVersionUID = 1L;
+	    private final UUID processId;
+	    private final UUID machineId;
+	    private final UUID itemId;
+
+	    public MachineProcessingInfo(UUID processId, UUID machineId, UUID itemId) {
+	        this.processId = processId;
+	        this.machineId = machineId;
+	        this.itemId = itemId;
+	    }
+
+	    public UUID getProcessId() { return processId; }
+	    public UUID getMachineId() { return machineId; }
+	    public UUID getItemId() { return itemId; }
+	}
 }
