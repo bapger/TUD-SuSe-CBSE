@@ -15,3 +15,4 @@ Project -> Run As -> (create a Maven run configuration with the same goal)
 ```
 If you work in and start the server in Eclipse (maven run configuration with the same goal) code changes will be updated directly to the server.
 
+http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api/
