@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Order</title>
+</head>
+<body>
+    <h2>Create Order Form</h2>
+    <form action="http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api/orders/createOrderForm" method="post">
+        <label for="customerId">Customer ID (UUID):</label><br>
+        <input type="text" id="customerId" name="customerId" required><br><br>
+
+        <label for="price">Price:</label><br>
+        <input type="text" id="price" name="price" required><br><br>
+
+        <input type="submit" value="Submit Order">
+    </form>
+</body>
+</html>

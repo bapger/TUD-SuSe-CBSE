@@ -57,12 +57,17 @@ public class OrderREST {
 
     @POST
     @Path("createOrderForm")
+    // Access html form :
+    // file:///H:/Documents/GitHub/TUD-SuSe-CBSE/Jakarta-Example-Project/Jakarta-Example-Project/st.cbse.LogisticsCenter.CRM.server/src/main/webapp/createOrderForm.html
     @Consumes("application/x-www-form-urlencoded")
-    public Response createOrderForm(
-            @FormParam("customerId") String customerId,
-            @FormParam("price") BigDecimal price) {
-        // Ici tu crées la commande avec les données du formulaire
-        return null;
+    public String createOrderForm(
+            @FormParam("customerId") String customerIdStr,
+            @FormParam("price") String priceStr) {
+        UUID customerId = UUID.fromString(customerIdStr);
+        BigDecimal price = new BigDecimal(priceStr);
+
+        String msg = "Order created" + orderMgmt.createOrder(customerId, price);
+        return msg;
     }
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
