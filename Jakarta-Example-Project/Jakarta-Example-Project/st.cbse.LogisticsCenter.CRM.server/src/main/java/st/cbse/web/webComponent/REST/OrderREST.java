@@ -55,19 +55,50 @@ public class OrderREST {
         return convertOrderDTOListToJson(customerOrders);
     }
 
-    @POST
-    @Path("createOrderForm")
     // Access html form :
     // file:///H:/Documents/GitHub/TUD-SuSe-CBSE/Jakarta-Example-Project/Jakarta-Example-Project/st.cbse.LogisticsCenter.CRM.server/src/main/webapp/createOrderForm.html
+
+    @POST
+    @Path("createOrderForm")
     @Consumes("application/x-www-form-urlencoded")
     public String createOrderForm(
             @FormParam("customerId") String customerIdStr,
-            @FormParam("price") String priceStr) {
+            @FormParam("price") String priceStr,
+            @FormParam("stl") List<String> stlFiles,
+            @FormParam("note") List<String> notes,
+            @FormParam("optionType") List<String> optionTypes,
+            @FormParam("optionData1") List<String> optionData1,
+            @FormParam("optionData2") List<String> optionData2) {
         UUID customerId = UUID.fromString(customerIdStr);
         BigDecimal price = new BigDecimal(priceStr);
 
-        String msg = "Order created" + orderMgmt.createOrder(customerId, price);
-        return msg;
+        UUID orderId = orderMgmt.createOrder(customerId, price);
+        System.out.println(stlFiles);
+        for (int i = 0; i < stlFiles.size(); i++) {
+            String stl = stlFiles.get(i);
+            String note = notes.get(i);
+
+            UUID requestId = orderMgmt.addPrintRequest(orderId, stl, note);
+
+            String optType = optionTypes.get(i);
+            String data1 = optionData1.get(i);
+            String data2 = optionData2.get(i);
+
+            switch (optType.toLowerCase()) {
+                case "paint":
+                    orderMgmt.addPaintJobOption(requestId, data1, Integer.parseInt(data2));
+                    break;
+                case "smooth":
+                    orderMgmt.addSmoothingOption(requestId, data1);
+                    break;
+                case "engrave":
+                    orderMgmt.addEngravingOption(requestId, data1, data2, "");
+                    break;
+            }
+        }
+
+        orderMgmt.finalizeOrder(orderId);
+        return "Order created: " + orderId;
     }
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;

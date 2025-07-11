@@ -1,18 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Create Order</title>
 </head>
 <body>
     <h2>Create Order Form</h2>
-    <form action="http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api/orders/createOrderForm" method="post">
+    <form id="orderForm" action="http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api/orders/createOrderForm" method="post">
         <label for="customerId">Customer ID (UUID):</label><br>
         <input type="text" id="customerId" name="customerId" required><br><br>
 
         <label for="price">Price:</label><br>
-        <input type="text" id="price" name="price" required><br><br>
+        <input type="number" id="price" name="price" step="0.01" required><br><br>
+
+        <div id="requestsContainer"></div>
+
+        <button type="button" onclick="addPrintRequest()">+ Add Print Request</button><br><br>
 
         <input type="submit" value="Submit Order">
     </form>
+
+    <script>
+        let requestIndex = 0;
+
+        function addPrintRequest() {
+            const container = document.getElementById('requestsContainer');
+
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <fieldset style="margin-bottom: 1em; padding: 1em; border: 1px solid #ccc;">
+                    <legend>Print Request #${requestIndex + 1}</legend>
+
+                    <label>STL Path: <input type="text" name="stl-${requestIndex}" required></label><br>
+                    <label>Note: <input type="text" name="note-${requestIndex}"></label><br><br>
+
+                    <label>Option Type:
+                        <select name="optionType-${requestIndex}" onchange="handleOptionTypeChange(this, ${requestIndex})">
+                            <option value="">None</option>
+                            <option value="paint">Paint</option>
+                            <option value="smooth">Smooth</option>
+                            <option value="engrave">Engrave</option>
+                        </select>
+                    </label><br><br>
+
+                    <div id="optionFields-${requestIndex}"></div>
+                </fieldset>
+            `;
+            container.appendChild(div);
+            requestIndex++;
+        }
+
+        function handleOptionTypeChange(select, index) {
+            const container = document.getElementById(`optionFields-${index}`);
+            container.innerHTML = '';
+
+            if (select.value === 'paint') {
+                container.innerHTML = `
+                    <label>Colour: <input type="text" name="colour-${index}"></label><br>
+                    <label>Layer Count: <input type="number" name="layers-${index}"></label>
+                `;
+            } else if (select.value === 'smooth') {
+                container.innerHTML = `
+                    <label>Granularity: <input type="text" name="granularity-${index}"></label>
+                `;
+            } else if (select.value === 'engrave') {
+                container.innerHTML = `
+                    <label>Text: <input type="text" name="text-${index}"></label><br>
+                    <label>Font: <input type="text" name="font-${index}"></label><br>
+                    <label>Image path: <input type="text" name="image-${index}"></label>
+                `;
+            }
+        }
+    </script>
 </body>
 </html>
