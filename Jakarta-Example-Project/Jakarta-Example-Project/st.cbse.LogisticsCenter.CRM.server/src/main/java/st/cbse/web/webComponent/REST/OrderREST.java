@@ -11,8 +11,12 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.FormParam;
 import st.cbse.crm.orderComponent.data.*;
 import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.crm.dto.OptionDTO;
@@ -25,11 +29,40 @@ public class OrderREST {
     @EJB
     IOrderMgmt orderMgmt;
 
+    // Get all orders : Manager only
     @GET
     @Path("getOrders")
     @Produces("application/json")
-    public JsonObject result() {
+    public JsonObject getAllOrders() {
         return convertOrderDTOListToJson(orderMgmt.fetchAllOrderDTOs());
+    }
+
+    // get customer's orders : Customer and Manager
+    @GET
+    @Path("getOrdersByCustomer/{customerId}")
+    @Produces("application/json")
+    public JsonObject getOrdersByCustomer(@jakarta.ws.rs.PathParam("customerId") String customerIdStr) {
+        UUID customerId;
+        try {
+            customerId = UUID.fromString(customerIdStr);
+        } catch (IllegalArgumentException e) {
+            return Json.createObjectBuilder()
+                    .add("error", "Invalid UUID format for customerId.")
+                    .build();
+        }
+
+        List<OrderDTO> customerOrders = orderMgmt.getOrdersByCustomer(customerId);
+        return convertOrderDTOListToJson(customerOrders);
+    }
+
+    @POST
+    @Path("createOrderForm")
+    @Consumes("application/x-www-form-urlencoded")
+    public Response createOrderForm(
+            @FormParam("customerId") String customerId,
+            @FormParam("price") BigDecimal price) {
+        // Ici tu crées la commande avec les données du formulaire
+        return null;
     }
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;

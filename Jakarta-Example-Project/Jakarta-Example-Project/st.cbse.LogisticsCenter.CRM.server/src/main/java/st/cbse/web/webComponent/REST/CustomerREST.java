@@ -22,7 +22,7 @@ public class CustomerREST {
 
     @EJB
     private ICustomerMgmt customerMgmt;
-    
+
     @EJB
     private IOrderMgmt orderMgmt;
 
@@ -34,22 +34,22 @@ public class CustomerREST {
             String name = input.getString("name");
             String email = input.getString("email");
             String password = input.getString("password");
-            
+
             UUID customerId = customerMgmt.registerCustomer(name, email, password);
-            
+
             JsonObject response = Json.createObjectBuilder()
-                .add("success", true)
-                .add("customerId", customerId.toString())
-                .add("message", "Customer registered successfully")
-                .build();
-                
+                    .add("success", true)
+                    .add("customerId", customerId.toString())
+                    .add("message", "Customer registered successfully")
+                    .build();
+
             return Response.status(Response.Status.CREATED).entity(response).build();
-            
+
         } catch (Exception e) {
             JsonObject error = Json.createObjectBuilder()
-                .add("success", false)
-                .add("error", e.getMessage())
-                .build();
+                    .add("success", false)
+                    .add("error", e.getMessage())
+                    .build();
             return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         }
     }
@@ -61,22 +61,22 @@ public class CustomerREST {
         try {
             String email = input.getString("email");
             String password = input.getString("password");
-            
+
             UUID customerId = customerMgmt.loginCustomer(email, password);
-            
+
             JsonObject response = Json.createObjectBuilder()
-                .add("success", true)
-                .add("customerId", customerId.toString())
-                .add("token", "customer_" + customerId.toString()) // Simple token
-                .build();
-                
+                    .add("success", true)
+                    .add("customerId", customerId.toString())
+                    .add("token", "customer_" + customerId.toString()) // Simple token
+                    .build();
+
             return Response.ok(response).build();
-            
+
         } catch (Exception e) {
             JsonObject error = Json.createObjectBuilder()
-                .add("success", false)
-                .add("error", "Invalid credentials")
-                .build();
+                    .add("success", false)
+                    .add("error", "Invalid credentials")
+                    .build();
             return Response.status(Response.Status.UNAUTHORIZED).entity(error).build();
         }
     }
@@ -88,31 +88,31 @@ public class CustomerREST {
         try {
             UUID customerId = UUID.fromString(customerIdStr);
             List<OrderDTO> orders = orderMgmt.getOrdersByCustomer(customerId);
-            
+
             JsonObjectBuilder response = Json.createObjectBuilder()
-                .add("success", true)
-                .add("count", orders.size());
-            
+                    .add("success", true)
+                    .add("count", orders.size());
+
             // Convert orders to JSON (simplified version)
             // In real implementation, you'd convert OrderDTO to JSON properly
             response.add("orders", Json.createArrayBuilder());
-            
+
             return Response.ok(response.build()).build();
-            
+
         } catch (Exception e) {
             JsonObject error = Json.createObjectBuilder()
-                .add("success", false)
-                .add("error", e.getMessage())
-                .build();
+                    .add("success", false)
+                    .add("error", e.getMessage())
+                    .build();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(error).build();
         }
     }
 
- // Create new order
+    // Create new order
     @POST
     @Path("{customerId}/orders")
     public Response createOrder(@PathParam("customerId") String customerIdStr,
-                                JsonObject input) {
+            JsonObject input) {
         try {
             UUID customerId = UUID.fromString(customerIdStr);
             BigDecimal basePrice = new BigDecimal(input.getString("basePrice"));
@@ -120,22 +120,22 @@ public class CustomerREST {
             UUID orderId = orderMgmt.createOrder(customerId, basePrice);
 
             JsonObject response = Json.createObjectBuilder()
-                                      .add("success", true)
-                                      .add("orderId", orderId.toString())
-                                      .build();
+                    .add("success", true)
+                    .add("orderId", orderId.toString())
+                    .build();
 
             return Response.status(Response.Status.CREATED)
-                           .entity(response)
-                           .build();
+                    .entity(response)
+                    .build();
 
         } catch (Exception e) {
             JsonObject error = Json.createObjectBuilder()
-                                   .add("success", false)
-                                   .add("error", e.getMessage())
-                                   .build();
+                    .add("success", false)
+                    .add("error", e.getMessage())
+                    .build();
             return Response.status(Response.Status.BAD_REQUEST)
-                           .entity(error)
-                           .build();           // <-- parenthèse et build manquants
+                    .entity(error)
+                    .build(); // <-- parenthèse et build manquants
         }
     }
 }
