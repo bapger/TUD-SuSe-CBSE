@@ -84,28 +84,4 @@ public class OrderREST {
                 .build();
     }
 
-    public static JsonObject convertOrderDTOToJson(OrderDTO orderDTO) {
-        JsonObjectBuilder orderObjectBuilder = Json.createObjectBuilder();
-
-        orderObjectBuilder.add("id", orderDTO.getId().toString()); // UUID en String
-        orderObjectBuilder.add("status", orderDTO.getStatus());
-        orderObjectBuilder.add("customerName", orderDTO.getCustomerName());
-        // orderObjectBuilder.add("creationDate", orderDTO.getCreationDate()); //
-        // LocalDateTime
-        // en String
-        orderObjectBuilder.add("total", orderDTO.getTotal()); // BigDecimal est géré directement
-
-        /*
-         * // Gérer la liste de PrintRequestDTO
-         * JsonArrayBuilder printRequestsArrayBuilder = Json.createArrayBuilder();
-         * for (PrintRequestDTO printRequestDTO : orderDTO.getPrintingRequests()) {
-         * // Supposons que PrintRequestDTO a une méthode toJsonObject()
-         * printRequestsArrayBuilder.add(printRequestDTO.toJsonObject());
-         * }
-         * orderObjectBuilder.add("printingRequests", printRequestsArrayBuilder);
-         */
-
-        return orderObjectBuilder.build();
-    }
-
 }
