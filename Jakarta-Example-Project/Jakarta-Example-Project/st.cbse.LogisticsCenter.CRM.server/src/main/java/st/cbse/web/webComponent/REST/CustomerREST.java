@@ -1,4 +1,4 @@
-package st.cbse.web.webComponent;
+package st.cbse.web.webComponent.REST;
 
 import jakarta.ejb.EJB;
 import jakarta.json.Json;
