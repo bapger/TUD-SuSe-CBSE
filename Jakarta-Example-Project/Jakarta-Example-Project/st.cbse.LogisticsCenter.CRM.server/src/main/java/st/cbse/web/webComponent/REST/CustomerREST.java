@@ -26,8 +26,9 @@ public class CustomerREST {
             UUID customerId = customerMgmt.loginCustomer(email, password);
             // Rediriger vers le dashboard customer
             return Response.seeOther(
-                java.net.URI.create("../customer-dashboard.html")
-            ).build();
+            	    java.net.URI.create("../customer-dashboard.html?id=" + customerId)
+            	).build();
+
         } catch (Exception e) {
             // Rediriger vers login avec message d'erreur
             return Response.seeOther(
