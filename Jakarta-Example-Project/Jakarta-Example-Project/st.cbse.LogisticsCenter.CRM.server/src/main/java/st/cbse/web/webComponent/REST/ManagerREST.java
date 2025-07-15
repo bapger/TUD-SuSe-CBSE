@@ -59,7 +59,7 @@ public class ManagerREST {
     public Response getAllOrders() {
         try {
             List<OrderDTO> orders = managerMgmt.listAllOrders();
-            JsonObject json = OrderREST.convertOrderDTOListToJson(orders);
+            JsonObject json = OrderREST.convertOrderDTOListToJson(orders,orderMgmt);
             return Response.ok(json).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

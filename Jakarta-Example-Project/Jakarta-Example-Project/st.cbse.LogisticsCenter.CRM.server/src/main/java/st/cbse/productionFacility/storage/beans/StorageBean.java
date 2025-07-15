@@ -6,11 +6,12 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.ejb.EJB;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
+import st.cbse.crm.orderComponent.interfaces.IOrderMgmt;
 import st.cbse.productionFacility.storage.data.*;
 import st.cbse.productionFacility.storage.dto.FinishedProductsDto;
 import st.cbse.productionFacility.storage.dto.ItemInfo;
@@ -26,6 +27,9 @@ public class StorageBean implements IStorageMgmt {
     private EntityManager em;
     
     private UUID mainStorageId;
+    
+    @EJB
+    private IOrderMgmt orderMgmt;
     
     @PostConstruct
     public void init() {
@@ -76,11 +80,13 @@ public class StorageBean implements IStorageMgmt {
         unfinished.setItemData(null);
         em.merge(unfinished);
         
-        FinishedProducts finished = new FinishedProducts(
-                processId, 
-                unfinished.getPrintRequestId(), 
-                item
-        );
+        FinishedProducts finished;
+		finished = new FinishedProducts(
+		        processId, 
+		        unfinished.getPrintRequestId(), 
+		        item,
+		        orderMgmt.getOrderIdByPrintRequestId(unfinished.getPrintRequestId()));
+
         
         Storage storage = em.find(Storage.class, mainStorageId);
         if (storage.addItem(item)) {
@@ -112,6 +118,9 @@ public class StorageBean implements IStorageMgmt {
                 FinishedProducts.class)
                 .setParameter("orderId", orderId)
                 .getResultList();
+        
+        LOG.warning("Found " + products.size() + " products for order " + orderId);
+        
         return products.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

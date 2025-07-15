@@ -14,7 +14,26 @@ public class FinishedProducts {
     
     private UUID printRequestId;
     
-    private UUID orderId;
+    public void setId(UUID id) {
+		this.id = id;
+	}
+
+	public void setProcessId(UUID processId) {
+		this.processId = processId;
+	}
+
+	public void setPrintRequestId(UUID printRequestId) {
+		this.printRequestId = printRequestId;
+	}
+
+	public void setCompletedAt(LocalDateTime completedAt) {
+		this.completedAt = completedAt;
+	}
+
+	public void setItemData(ItemData itemData) {
+		this.itemData = itemData;
+	}
+	private UUID orderId;
     
     private LocalDateTime completedAt = LocalDateTime.now();
     
@@ -25,10 +44,11 @@ public class FinishedProducts {
     
     protected FinishedProducts() {}
     
-    public FinishedProducts(UUID processId, UUID printRequestId, ItemData itemData) {
+    public FinishedProducts(UUID processId, UUID printRequestId, ItemData itemData,UUID orderId) {
         this.processId = processId;
         this.printRequestId = printRequestId;
         this.itemData = itemData;
+        this.orderId = orderId;
     }
     
     public UUID getId() { return id; }

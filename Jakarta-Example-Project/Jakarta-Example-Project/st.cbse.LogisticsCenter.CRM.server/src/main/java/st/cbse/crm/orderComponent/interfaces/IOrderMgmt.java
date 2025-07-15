@@ -44,4 +44,6 @@ public interface IOrderMgmt {
 
 	boolean hasUnpaidInvoice(UUID orderId) throws Exception;
 
+	UUID getOrderIdByPrintRequestId(UUID printRequestId);
+
 }

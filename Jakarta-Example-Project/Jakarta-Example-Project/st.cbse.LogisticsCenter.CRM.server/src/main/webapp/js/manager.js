@@ -116,7 +116,6 @@ async function sendToProduction(orderId) {
 async function shipOrder(orderId, total) {
   try {
     await fetch(`${BASE_URL}/manager/ship/${orderId}`, { method: 'POST' });
-    await fetch(`${BASE_URL}/orders/invoice/${orderId}`, { method: 'POST' });
     alert(`Order shipped and invoice created for €${total}`);
     loadManagerOrders();
   } catch (e) {
@@ -124,7 +123,6 @@ async function shipOrder(orderId, total) {
   }
 }
 
-// Load items from storage
 function loadStorage() {
   const container = document.getElementById("storage-list");
   container.innerHTML = `<div class="text-muted">Loading...</div>`;
@@ -132,17 +130,19 @@ function loadStorage() {
   fetch(`${BASE_URL}/manager/storage`)
     .then(res => res.json())
     .then(data => {
-      if (!data.items || data.items.length === 0) {
+      const storedItems = (data.items || []).filter(item => !item.shipped); // Exclude shipped
+
+      if (storedItems.length === 0) {
         container.innerHTML = `<div class="alert alert-info">Storage is empty</div>`;
         return;
       }
 
       container.innerHTML = `
         <ul class="list-group">
-          ${data.items.map(item => `
+          ${storedItems.map(item => `
             <li class="list-group-item">
               <strong>Request ID:</strong> ${item.printRequestId}<br>
-              <strong>Status:</strong> ${item.shipped ? 'Shipped' : 'Stored'}<br>
+              <strong>Status:</strong> Stored<br>
               <strong>Completed At:</strong> ${formatDate(item.completedAt)}<br>
               ${item.itemInfo ? `
                 <strong>Location:</strong> ${item.itemInfo.currentLocation}<br>

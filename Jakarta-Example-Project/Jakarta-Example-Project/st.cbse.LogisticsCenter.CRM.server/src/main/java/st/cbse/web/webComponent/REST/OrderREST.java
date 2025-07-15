@@ -34,7 +34,7 @@ public class OrderREST {
     @Path("getOrders")
     @Produces("application/json")
     public JsonObject getAllOrders() {
-        return convertOrderDTOListToJson(orderMgmt.fetchAllOrderDTOs());
+        return convertOrderDTOListToJson(orderMgmt.fetchAllOrderDTOs(),orderMgmt);
     }
 
     // get customer's orders : Customer and Manager
@@ -52,7 +52,7 @@ public class OrderREST {
         }
 
         List<OrderDTO> customerOrders = orderMgmt.getOrdersByCustomer(customerId);
-        return convertOrderDTOListToJson(customerOrders);
+        return convertOrderDTOListToJson(customerOrders,orderMgmt);
     }
 
     // Access html form :
@@ -155,7 +155,7 @@ public class OrderREST {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-    public static JsonObject convertOrderDTOListToJson(List<OrderDTO> orders) {
+    public static JsonObject convertOrderDTOListToJson(List<OrderDTO> orders,IOrderMgmt orderMgmt) {
 
         JsonArrayBuilder orderArrayBuilder = Json.createArrayBuilder();
 
@@ -167,6 +167,11 @@ public class OrderREST {
             orderObjectBuilder.add("customerName", orderDTO.getCustomerName());
             orderObjectBuilder.add("creationDate", orderDTO.getCreationDate().format(DATE_TIME_FORMATTER));
             orderObjectBuilder.add("total", orderDTO.getTotal());
+            try {
+				orderObjectBuilder.add("hasUnpaidInvoice", orderMgmt.hasUnpaidInvoice(orderDTO.getId()));
+			} catch (Exception e) {
+
+			}
 
             JsonArrayBuilder printRequestsArrayBuilder = Json.createArrayBuilder();
             for (PrintRequestDTO printRequestDTO : orderDTO.getPrintingRequests()) {

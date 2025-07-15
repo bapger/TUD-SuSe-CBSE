@@ -157,6 +157,15 @@ public class OrderBean implements IOrderMgmt {
 	            .map(OrderDTO::of)
 	            .collect(java.util.stream.Collectors.toList());
 	}
+	
+	public UUID getOrderIdByPrintRequestId(UUID printRequestId) {
+	    return em.createQuery(
+	        "SELECT pr.orderId FROM PrintingRequest pr WHERE pr.id = :printRequestId", 
+	        UUID.class)
+	        .setParameter("printRequestId", printRequestId)
+	        .getSingleResult();
+	}
+
 
 	/* ================================================================= */
 	/*  Helpers                                                          */
@@ -397,7 +406,6 @@ public class OrderBean implements IOrderMgmt {
 	    LOG.info("Invoice " + invoice.getId() + " paid with reference: " + paymentReference);
 	}
 
-	@Override
 	public boolean hasUnpaidInvoice(UUID orderId) throws Exception {
 	    // Find the order
 	    Order order = em.find(Order.class, orderId);

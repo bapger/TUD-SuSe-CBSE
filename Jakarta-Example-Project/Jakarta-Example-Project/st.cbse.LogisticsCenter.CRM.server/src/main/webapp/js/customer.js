@@ -373,30 +373,33 @@ function resetOrderForm() {
     document.getElementById('create-message').classList.add('d-none');
 }
 
-// ========== PAIEMENT ==========
-
-// Fonction pour charger les commandes non payées
+// Function to load unpaid invoices for SHIPPED orders
 function loadUnpaidOrders() {
     const selectElement = document.getElementById('unpaidOrders');
     
-    // Filtrer les commandes avec statut PENDING
-    unpaidOrders = currentOrders.filter(order => order.status === 'PENDING');
-    
-    // Réinitialiser le select
-    selectElement.innerHTML = '<option value="">Choose an order...</option>';
-    
-    // Ajouter les options
+    // Filter SHIPPED orders with unpaid invoices
+    unpaidOrders = currentOrders.filter(order => 
+        order.status === 'SHIPPED' && order.hasUnpaidInvoice === true
+    );
+	console.log(currentOrders);
+
+    // Reset the dropdown
+    selectElement.innerHTML = '<option value="">Choose an unpaid invoice...</option>';
+
+    // Populate dropdown
     unpaidOrders.forEach(order => {
         const option = document.createElement('option');
         option.value = order.id;
         option.textContent = `Order #${order.id.substring(0, 8)} - €${order.total}`;
         selectElement.appendChild(option);
     });
-    
+
+    // If none found
     if (unpaidOrders.length === 0) {
-        selectElement.innerHTML = '<option value="">No unpaid orders</option>';
+        selectElement.innerHTML = '<option value="">No unpaid invoices</option>';
     }
 }
+
 
 // Fonction pour afficher les détails de la commande sélectionnée
 function showOrderDetails() {
@@ -412,6 +415,7 @@ function showOrderDetails() {
     }
     
     const order = unpaidOrders.find(o => o.id === orderId);
+	console.log(order);
     if (order) {
         orderInfoDiv.innerHTML = `
             <p class="mb-1">Order ID: ${order.id.substring(0, 8)}</p>
@@ -430,6 +434,10 @@ function showOrderDetails() {
 			    const messageDiv = document.getElementById('pay-message');
 			    const orderId = document.getElementById('unpaidOrders').value;
 			    const transactionRef = document.getElementById('transactionRef').value;
+				const formData = new URLSearchParams();
+				formData.append('transactionRef', transactionRef);
+				formData.append('orderId', orderId); // needed since your endpoint expects this too
+
 			    
 			    if (!orderId) {
 			        messageDiv.className = 'alert alert-danger mt-3';
@@ -439,13 +447,13 @@ function showOrderDetails() {
 			    }
 			    
 			    try {
-			        const formData = new FormData();
-			        formData.append('transactionRef', transactionRef);
-
-			        const response = await fetch(`rest-api/orders/pay/${orderId}`, {
-			            method: 'POST',
-			            body: formData
-			        });
+					const response = await fetch(`rest-api/customer/pay/${orderId}`, {
+					  method: 'POST',
+					  headers: {
+					    'Content-Type': 'application/x-www-form-urlencoded'
+					  },
+					  body: formData
+					});
 
 			        if (response.ok) {
 			            messageDiv.className = 'alert alert-success mt-3';
