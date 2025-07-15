@@ -59,46 +59,98 @@ public class OrderREST {
     // file:///H:/Documents/GitHub/TUD-SuSe-CBSE/Jakarta-Example-Project/Jakarta-Example-Project/st.cbse.LogisticsCenter.CRM.server/src/main/webapp/createOrderForm.html
 
     @POST
-    @Path("createOrderForm")
+    @Path("create")
     @Consumes("application/x-www-form-urlencoded")
-    public String createOrderForm(
-            @FormParam("customerId") String customerIdStr,
-            @FormParam("price") String priceStr,
-            @FormParam("stl") List<String> stlFiles,
-            @FormParam("note") List<String> notes,
-            @FormParam("optionType") List<String> optionTypes,
-            @FormParam("optionData1") List<String> optionData1,
-            @FormParam("optionData2") List<String> optionData2) {
-        UUID customerId = UUID.fromString(customerIdStr);
-        BigDecimal price = new BigDecimal(priceStr);
+    @Produces("text/plain")
+    public Response createOrder(
+        @FormParam("customerId") String customerIdStr,
+        @FormParam("price") String priceStr) {
 
-        UUID orderId = orderMgmt.createOrder(customerId, price);
-        System.out.println(stlFiles);
-        for (int i = 0; i < stlFiles.size(); i++) {
-            String stl = stlFiles.get(i);
-            String note = notes.get(i);
-
-            UUID requestId = orderMgmt.addPrintRequest(orderId, stl, note);
-
-            String optType = optionTypes.get(i);
-            String data1 = optionData1.get(i);
-            String data2 = optionData2.get(i);
-
-            switch (optType.toLowerCase()) {
-                case "paint":
-                    orderMgmt.addPaintJobOption(requestId, data1, Integer.parseInt(data2));
-                    break;
-                case "smooth":
-                    orderMgmt.addSmoothingOption(requestId, data1);
-                    break;
-                case "engrave":
-                    orderMgmt.addEngravingOption(requestId, data1, data2, "");
-                    break;
-            }
+        try {
+            UUID customerId = UUID.fromString(customerIdStr);
+            BigDecimal price = new BigDecimal(priceStr);
+            UUID orderId = orderMgmt.createOrder(customerId, price);
+            return Response.ok(orderId.toString()).build();
+        } catch (Exception e) {
+            return Response.serverError().entity("ERROR: " + e.getMessage()).build();
         }
+    }
+    @POST
+    @Path("addPrintRequest")
+    @Consumes("application/x-www-form-urlencoded")
+    @Produces("text/plain")
+    public Response addPrintRequest(
+        @FormParam("orderId") String orderIdStr,
+        @FormParam("stlPath") String stlPath,
+        @FormParam("note") String note) {
 
-        orderMgmt.finalizeOrder(orderId);
-        return "Order created: " + orderId;
+        try {
+            UUID orderId = UUID.fromString(orderIdStr);
+            UUID requestId = orderMgmt.addPrintRequest(orderId, stlPath, note);
+            return Response.ok(requestId.toString()).build();
+        } catch (Exception e) {
+            return Response.serverError().entity("ERROR: " + e.getMessage()).build();
+        }
+    }
+    @POST
+    @Path("addPaintOption")
+    @Consumes("application/x-www-form-urlencoded")
+    public Response addPaintOption(
+        @FormParam("requestId") String requestIdStr,
+        @FormParam("color") String color,
+        @FormParam("layers") int layers) {
+
+        try {
+            UUID requestId = UUID.fromString(requestIdStr);
+            orderMgmt.addPaintJobOption(requestId, color, layers);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.serverError().entity("ERROR: " + e.getMessage()).build();
+        }
+    }
+    @POST
+    @Path("addSmoothingOption")
+    @Consumes("application/x-www-form-urlencoded")
+    public Response addSmoothingOption(
+        @FormParam("requestId") String requestIdStr,
+        @FormParam("granularity") String granularity) {
+
+        try {
+            UUID requestId = UUID.fromString(requestIdStr);
+            orderMgmt.addSmoothingOption(requestId, granularity);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.serverError().entity("ERROR: " + e.getMessage()).build();
+        }
+    }
+    @POST
+    @Path("addEngravingOption")
+    @Consumes("application/x-www-form-urlencoded")
+    public Response addEngravingOption(
+        @FormParam("requestId") String requestIdStr,
+        @FormParam("text") String text,
+        @FormParam("font") String font,
+        @FormParam("image") String image) {
+
+        try {
+            UUID requestId = UUID.fromString(requestIdStr);
+            orderMgmt.addEngravingOption(requestId, text, font, image);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.serverError().entity("ERROR: " + e.getMessage()).build();
+        }
+    }
+    @POST
+    @Path("finalize")
+    @Consumes("application/x-www-form-urlencoded")
+    public Response finalizeOrder(@FormParam("orderId") String orderIdStr) {
+        try {
+            UUID orderId = UUID.fromString(orderIdStr);
+            orderMgmt.finalizeOrder(orderId);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.serverError().entity("ERROR: " + e.getMessage()).build();
+        }
     }
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -135,6 +187,7 @@ public class OrderREST {
                 .add("ID", printRequestDTO.getId().toString())
                 .add("options", convertOptionDTOListToJson(printRequestDTO.getOptions()))
                 .add("price", printRequestDTO.getPrice())
+                .add("note", printRequestDTO.getNote())
                 .build();
     }
 
@@ -152,5 +205,10 @@ public class OrderREST {
                 .add("options", optionArrayBuilder)
                 .build();
     }
+
+	public static Object createError(String message) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

@@ -1,3 +1,8 @@
+// Fonction pour récupérer l'ID du client
+function getCustomerId() {
+    return sessionStorage.getItem('customerId');
+}
+
 // Fonction pour afficher/cacher les sections
 function showSection(sectionName) {
     // Cacher toutes les sections
@@ -17,28 +22,44 @@ function showSection(sectionName) {
     }
     
     // Ajouter la classe active au lien correspondant
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
     
     // Charger les données selon la section
     if (sectionName === 'orders') {
         loadOrders();
     } else if (sectionName === 'pay') {
         loadUnpaidOrders();
+    } else if (sectionName === 'new-order') {
+        resetOrderForm();
     }
 }
 
-// Fonction pour afficher/cacher les options
-function toggleOption(optionType) {
-    const optionsDiv = document.getElementById(optionType + '-options');
-    if (optionsDiv) {
-        optionsDiv.style.display = optionsDiv.style.display === 'none' ? 'block' : 'none';
+// Fonction pour obtenir la classe CSS selon le statut
+function getStatusClass(status) {
+    const statusClasses = {
+        'PENDING': 'bg-warning text-dark',
+        'PAID': 'bg-info text-white',
+        'IN_PRODUCTION': 'bg-primary',
+        'FINISHED': 'bg-success',
+        'SHIPPED': 'bg-secondary'
+    };
+    return statusClasses[status] || 'bg-secondary';
+}
+
+// Fonction pour formater la date
+function formatDate(dateString) {
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch (e) {
+        return dateString;
     }
 }
 
 // Fonction de déconnexion
 function logout() {
-    // Supprimer les données de session si nécessaire
     sessionStorage.clear();
-    // Rediriger vers la page de login
     window.location.href = 'login.html';
 }

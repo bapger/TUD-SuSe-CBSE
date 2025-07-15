@@ -26,7 +26,7 @@
                                     <option value="">Select user type...</option>
                                     <option value="customer">Customer</option>
                                     <option value="manager">Manager</option>
-                                    <option value="production">Production Manager</option>
+                                    <option value="prodManager">Production Manager</option>
                                 </select>
                             </div>
 
@@ -79,8 +79,8 @@
                 case 'manager':
                     form.action = BASE_URL + "/manager/login";
                     break;
-                case 'production':
-                    form.action = BASE_URL + "/production/login";
+                case 'prodManager':
+                    form.action = BASE_URL + "/prodManager/login";
                     break;
                 default:
                     form.action = "";
@@ -123,12 +123,12 @@
                     form.action = BASE_URL + "/manager/login";
                     break;
                     
-                case 'production':
+                case 'prodManager':
                     loginTitle.textContent = 'Login as Production Manager';
                     loginButton.className = 'btn btn-warning btn-lg w-100';
                     roleIcon.className = 'bi bi-gear display-1 text-warning';
                     registerLink.style.display = 'none';
-                    form.action = BASE_URL + "/production/login";
+                    form.action = BASE_URL + "/prodManager/login";
                     break;
                     
                 default:

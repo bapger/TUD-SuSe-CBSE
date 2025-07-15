@@ -1,14 +1,33 @@
 // Variables globales
 let currentOrders = [];
 let unpaidOrders = [];
+let currentOrderId = null;
+let currentRequestId = null;
+let requestCounter = 0;
+// Base URL for REST API
+const BASE_URL = "http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api";
 
-// Charger automatiquement les commandes au chargement de la page
+
+// Initialisation au chargement de la pagex
 document.addEventListener('DOMContentLoaded', function() {
+    // Stocker l'ID du client depuis l'URL si présent
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerId = urlParams.get('id');
+    if (customerId) {
+        sessionStorage.setItem('customerId', customerId);
+    }
+    
+    // Vérifier si le client est connecté
+    if (!getCustomerId()) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    // Charger les commandes
     loadOrders();
     
-    // Setup des formulaires
-    document.getElementById('createOrderForm').addEventListener('submit', handleCreateOrder);
-    document.getElementById('payOrderForm').addEventListener('submit', handlePayOrder);
+    // Masquer tous les formulaires d'étapes sauf le premier
+    resetOrderForm();
 });
 
 // Fonction pour charger les commandes
@@ -17,7 +36,7 @@ async function loadOrders() {
     const customerId = getCustomerId();
     
     try {
-        const response = await fetch(`rest-api/orders/getOrdersByCustomer/${customerId}`);
+        const response = await fetch(BASE_URL + `/orders/getOrdersByCustomer/${customerId}`);
         const data = await response.json();
         
         if (data.error) {
@@ -68,6 +87,7 @@ function displayOrders(orders) {
                                 ${order.printingRequests.map(pr => `
                                     <li class="mb-2">
                                         <small>ID: ${pr.ID.substring(0, 8)}</small><br>
+										<small>Note: ${pr.note}</small><br>
                                         <small>Price: €${pr.price}</small>
                                         ${pr.options && pr.options.options && pr.options.options.length > 0 ? `
                                             <br><small>Options: ${pr.options.options.map(opt => opt.type).join(', ')}</small>
@@ -86,68 +106,274 @@ function displayOrders(orders) {
     ordersList.innerHTML = html;
 }
 
-// Fonction pour obtenir la classe CSS selon le statut
-function getStatusClass(status) {
-    const statusClasses = {
-        'PENDING': 'bg-warning text-dark',
-        'PAID': 'bg-info text-white',
-        'IN_PRODUCTION': 'bg-primary',
-        'FINISHED': 'bg-success',
-        'SHIPPED': 'bg-secondary'
-    };
-    return statusClasses[status] || 'bg-secondary';
-}
+// ========== CRÉATION DE COMMANDE ==========
 
-// Fonction pour formater la date
-function formatDate(dateString) {
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    } catch (e) {
-        return dateString;
+// Fonction pour démarrer une nouvelle commande
+async function startOrder() {
+    const basePrice = document.getElementById('basePrice').value;
+    if (!basePrice) {
+        alert('Please enter a base price');
+        return;
     }
-}
 
-// Fonction pour gérer la création de commande
-async function handleCreateOrder(event) {
-    event.preventDefault();
-    
-    const messageDiv = document.getElementById('create-message');
-    const customerId = urlParams.get('id');
-    
-    // Récupérer les valeurs du formulaire
-    const formData = new FormData();
-    formData.append('customerId', customerId);
-    formData.append('price', document.getElementById('basePrice').value);
-    
     try {
-        const response = await fetch('rest-api/orders/createOrderForm', {
-            method: 'POST',
-            body: formData
-        });
-        
+		const payload = new URLSearchParams();
+		payload.append('customerId', getCustomerId());
+		payload.append('price', basePrice);
+
+		const response = await fetch(BASE_URL + '/orders/create', {
+		    method: 'POST',
+		    headers: {
+		        'Content-Type': 'application/x-www-form-urlencoded'
+		    },
+		    body: payload
+		});
+
+
         const result = await response.text();
+        // Extraire l'ID de la commande de la réponse
+        const uuidMatch = result.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        if (uuidMatch) {
+            currentOrderId = uuidMatch[0];
+        }
         
-        messageDiv.className = 'alert alert-success mt-3';
-        messageDiv.textContent = result;
-        messageDiv.classList.remove('d-none');
-        
-        // Réinitialiser le formulaire
-        document.getElementById('createOrderForm').reset();
-        
-        // Recharger les commandes après 2 secondes
-        setTimeout(() => {
-            showSection('orders');
-            messageDiv.classList.add('d-none');
-        }, 2000);
+        document.getElementById('step-base-price').style.display = 'none';
+        document.getElementById('step-print-requests').style.display = 'block';
+        requestCounter = 1;
+        document.getElementById('request-number').textContent = requestCounter;
         
     } catch (error) {
-        console.error('Error creating order:', error);
-        messageDiv.className = 'alert alert-danger mt-3';
-        messageDiv.textContent = 'Failed to create order';
-        messageDiv.classList.remove('d-none');
+        alert('Error creating order: ' + error.message);
     }
 }
+
+async function addPrintRequest() {
+    const stlPath = document.getElementById('stlPath').value;
+    const note = document.getElementById('note').value;
+
+    if (!stlPath) {
+        alert('Please enter STL file path');
+        return;
+    }
+
+    try {
+        const payload = new URLSearchParams();
+        payload.append('orderId', currentOrderId);
+        payload.append('stlPath', stlPath);
+        payload.append('note', note || '');
+
+        const response = await fetch(BASE_URL + '/orders/addPrintRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: payload
+        });
+
+        const result = await response.text();
+        if (result.startsWith('ERROR:')) {
+            throw new Error(result);
+        }
+
+        currentRequestId = result;
+
+        document.getElementById('step-print-requests').style.display = 'none';
+        document.getElementById('step-options').style.display = 'block';
+        document.getElementById('options-request-number').textContent = requestCounter;
+
+    } catch (error) {
+        alert('Error adding print request: ' + error.message);
+    }
+}
+
+
+// Fonctions pour gérer les options
+function showOptionForm(optionType) {
+    // Cacher tous les formulaires d'options
+    document.getElementById('paint-form').style.display = 'none';
+    document.getElementById('smoothing-form').style.display = 'none';
+    document.getElementById('engraving-form').style.display = 'none';
+    
+    // Afficher le formulaire demandé
+    document.getElementById(optionType + '-form').style.display = 'block';
+}
+
+function hideOptionForm(optionType) {
+    document.getElementById(optionType + '-form').style.display = 'none';
+}
+
+async function addPaintOption() {
+    const color = document.getElementById('paintColor').value;
+    const layers = document.getElementById('paintLayers').value;
+
+    if (!color || !layers) {
+        alert('Please fill all paint details');
+        return;
+    }
+
+    try {
+        const payload = new URLSearchParams();
+        payload.append('requestId', currentRequestId);
+        payload.append('color', color);
+        payload.append('layers', layers);
+
+        const response = await fetch(BASE_URL + '/orders/addPaintOption', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: payload
+        });
+
+        if (response.ok) {
+            alert('Paint option added!');
+            document.getElementById('paintColor').value = '';
+            document.getElementById('paintLayers').value = '';
+            hideOptionForm('paint');
+        } else {
+            throw new Error(await response.text());
+        }
+
+    } catch (error) {
+        alert('Error adding paint option: ' + error.message);
+    }
+}
+
+
+async function addSmoothingOption() {
+    const granularity = document.getElementById('granularity').value;
+    
+    if (!granularity) {
+        alert('Please enter granularity');
+        return;
+    }
+    
+    try {
+        const payload = new URLSearchParams();
+        payload.append('requestId', currentRequestId);
+        payload.append('granularity', granularity);
+
+        const response = await fetch('rest-api/orders/addSmoothingOption', {
+			    method: 'POST',
+			    headers: {
+			        'Content-Type': 'application/x-www-form-urlencoded'
+			    },
+			    body: payload
+			});
+
+        if (response.ok) {
+            alert('Smoothing option added!');
+            document.getElementById('granularity').value = '';
+            hideOptionForm('smoothing');
+        } else {
+            throw new Error(await response.text());
+        }
+        
+    } catch (error) {
+        alert('Error adding smoothing option: ' + error.message);
+    }
+}
+
+async function addEngravingOption() {
+    const text = document.getElementById('engravingText').value;
+    const font = document.getElementById('engravingFont').value;
+    const image = document.getElementById('engravingImage').value;
+    
+    if (!text || !font) {
+        alert('Please enter text and font');
+        return;
+    }
+    
+    try {
+        const payload = new URLSearchParams();
+        payload.append('requestId', currentRequestId);
+        payload.append('text', text);
+        payload.append('font', font);
+        payload.append('image', image || '');
+
+        const response = await fetch('rest-api/orders/addEngravingOption', {
+			    method: 'POST',
+			    headers: {
+			        'Content-Type': 'application/x-www-form-urlencoded'
+			    },
+			    body: payload
+			});
+
+        if (response.ok) {
+            alert('Engraving option added!');
+            document.getElementById('engravingText').value = '';
+            document.getElementById('engravingFont').value = '';
+            document.getElementById('engravingImage').value = '';
+            hideOptionForm('engraving');
+        } else {
+            throw new Error(await response.text());
+        }
+        
+    } catch (error) {
+        alert('Error adding engraving option: ' + error.message);
+    }
+}
+
+function finishOptions() {
+    document.getElementById('step-options').style.display = 'none';
+    document.getElementById('step-confirm').style.display = 'block';
+}
+
+function addAnotherRequest() {
+    requestCounter++;
+    document.getElementById('request-number').textContent = requestCounter;
+    document.getElementById('stlPath').value = '';
+    document.getElementById('note').value = '';
+    
+    document.getElementById('step-confirm').style.display = 'none';
+    document.getElementById('step-print-requests').style.display = 'block';
+}
+
+async function finalizeOrder() {
+    try {
+        const payload = new URLSearchParams();
+        payload.append('orderId', currentOrderId);
+
+        const response = await fetch(BASE_URL + '/orders/finalize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: payload
+        });
+
+        if (response.ok) {
+            const messageDiv = document.getElementById('create-message');
+            messageDiv.className = 'alert alert-success mt-3';
+            messageDiv.textContent = '✓ Order submitted successfully!';
+            messageDiv.classList.remove('d-none');
+
+            resetOrderForm();
+            setTimeout(() => showSection('orders'), 2000);
+        } else {
+            throw new Error(await response.text());
+        }
+
+    } catch (error) {
+        alert('Error finalizing order: ' + error.message);
+    }
+}
+
+
+function resetOrderForm() {
+    currentOrderId = null;
+    currentRequestId = null;
+    requestCounter = 0;
+    
+    document.getElementById('basePrice').value = '';
+    document.getElementById('step-base-price').style.display = 'block';
+    document.getElementById('step-print-requests').style.display = 'none';
+    document.getElementById('step-options').style.display = 'none';
+    document.getElementById('step-confirm').style.display = 'none';
+    document.getElementById('create-message').classList.add('d-none');
+}
+
+// ========== PAIEMENT ==========
 
 // Fonction pour charger les commandes non payées
 function loadUnpaidOrders() {
@@ -191,49 +417,84 @@ function showOrderDetails() {
             <p class="mb-1">Order ID: ${order.id.substring(0, 8)}</p>
             <p class="mb-1">Date: ${formatDate(order.creationDate)}</p>
             <p class="mb-1">Status: ${order.status}</p>
-        `;
-        orderTotalDiv.textContent = `Total: €${order.total}`;
-        detailsDiv.classList.remove('d-none');
-    }
-}
+			        `;
+			        orderTotalDiv.textContent = `Total: €${order.total}`;
+			        detailsDiv.classList.remove('d-none');
+			    }
+			}
 
-// Fonction pour gérer le paiement
-async function handlePayOrder(event) {
-    event.preventDefault();
-    
-    const messageDiv = document.getElementById('pay-message');
-    const orderId = document.getElementById('unpaidOrders').value;
-    const transactionRef = document.getElementById('transactionRef').value;
-    
-    if (!orderId) {
-        messageDiv.className = 'alert alert-danger mt-3';
-        messageDiv.textContent = 'Please select an order';
-        messageDiv.classList.remove('d-none');
-        return;
-    }
-    
-    try {
-        // Ici, vous devriez appeler votre API de paiement
-        // Pour l'instant, on simule le succès
-        
-        messageDiv.className = 'alert alert-success mt-3';
-        messageDiv.textContent = 'Payment processed successfully!';
-        messageDiv.classList.remove('d-none');
-        
-        // Réinitialiser le formulaire
-        document.getElementById('payOrderForm').reset();
-        document.getElementById('order-details').classList.add('d-none');
-        
-        // Recharger les commandes après 2 secondes
-        setTimeout(() => {
-            showSection('orders');
-            messageDiv.classList.add('d-none');
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Error processing payment:', error);
-        messageDiv.className = 'alert alert-danger mt-3';
-        messageDiv.textContent = 'Failed to process payment';
-        messageDiv.classList.remove('d-none');
-    }
-}
+			// Fonction pour gérer le paiement
+			async function handlePayOrder(event) {
+			    event.preventDefault();
+			    
+			    const messageDiv = document.getElementById('pay-message');
+			    const orderId = document.getElementById('unpaidOrders').value;
+			    const transactionRef = document.getElementById('transactionRef').value;
+			    
+			    if (!orderId) {
+			        messageDiv.className = 'alert alert-danger mt-3';
+			        messageDiv.textContent = 'Please select an order';
+			        messageDiv.classList.remove('d-none');
+			        return;
+			    }
+			    
+			    try {
+			        const formData = new FormData();
+			        formData.append('transactionRef', transactionRef);
+
+			        const response = await fetch(`rest-api/orders/pay/${orderId}`, {
+			            method: 'POST',
+			            body: formData
+			        });
+
+			        if (response.ok) {
+			            messageDiv.className = 'alert alert-success mt-3';
+			            messageDiv.textContent = 'Payment processed successfully!';
+			            messageDiv.classList.remove('d-none');
+			            
+			            // Réinitialiser le formulaire
+			            document.getElementById('payOrderForm').reset();
+			            document.getElementById('order-details').classList.add('d-none');
+			            
+			            // Recharger les commandes après 2 secondes
+			            setTimeout(() => {
+			                showSection('orders');
+			                messageDiv.classList.add('d-none');
+			            }, 2000);
+			        } else {
+			            throw new Error(await response.text());
+			        }
+			        
+			    } catch (error) {
+			        console.error('Error processing payment:', error);
+			        messageDiv.className = 'alert alert-danger mt-3';
+			        messageDiv.textContent = 'Failed to process payment: ' + error.message;
+			        messageDiv.classList.remove('d-none');
+			    }
+			}
+
+			// ========== EVENT LISTENERS ==========
+
+			// Attacher les fonctions aux éléments globaux du window pour les appels onclick dans le HTML
+			window.startOrder = startOrder;
+			window.addPrintRequest = addPrintRequest;
+			window.showOptionForm = showOptionForm;
+			window.hideOptionForm = hideOptionForm;
+			window.addPaintOption = addPaintOption;
+			window.addSmoothingOption = addSmoothingOption;
+			window.addEngravingOption = addEngravingOption;
+			window.finishOptions = finishOptions;
+			window.addAnotherRequest = addAnotherRequest;
+			window.finalizeOrder = finalizeOrder;
+			window.showSection = showSection;
+			window.loadOrders = loadOrders;
+			window.showOrderDetails = showOrderDetails;
+			window.logout = logout;
+
+			// Setup du formulaire de paiement
+			document.addEventListener('DOMContentLoaded', function() {
+			    const payOrderForm = document.getElementById('payOrderForm');
+			    if (payOrderForm) {
+			        payOrderForm.addEventListener('submit', handlePayOrder);
+			    }
+			});

@@ -67,103 +67,118 @@
                     </div>
                 </section>
 
-                <!-- Create Order Section -->
+                <!-- Create Order Section MODIFIÉE -->
                 <section id="new-order-section" class="section" style="display:none;">
                     <h2 class="mb-4"><i class="bi bi-plus-circle"></i> Create New Order</h2>
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <form id="createOrderForm">
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">Basic Information</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-3">
-                                            <label for="basePrice" class="form-label">Base Price (€)</label>
-                                            <input type="number" class="form-control" id="basePrice" step="0.01" min="0" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">Print Request Details</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-3">
-                                            <label for="stlPath" class="form-label">STL File Path</label>
-                                            <input type="text" class="form-control" id="stlPath" placeholder="path/to/file.stl" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="note" class="form-label">Note (optional)</label>
-                                            <textarea class="form-control" id="note" rows="3" placeholder="Any special instructions..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">Additional Options</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <!-- Paint Option -->
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="checkbox" id="addPaint" onchange="toggleOption('paint')">
-                                            <label class="form-check-label" for="addPaint">
-                                                <i class="bi bi-palette"></i> Add Paint Job
-                                            </label>
-                                            <div id="paint-options" class="mt-2 ms-4" style="display:none;">
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-2">
-                                                        <input type="text" class="form-control form-control-sm" id="paintColor" placeholder="Color (e.g., Red)">
-                                                    </div>
-                                                    <div class="col-md-6 mb-2">
-                                                        <input type="number" class="form-control form-control-sm" id="paintLayers" placeholder="Number of layers" min="1">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Smoothing Option -->
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="checkbox" id="addSmoothing" onchange="toggleOption('smoothing')">
-                                            <label class="form-check-label" for="addSmoothing">
-                                                <i class="bi bi-magic"></i> Add Smoothing
-                                            </label>
-                                            <div id="smoothing-options" class="mt-2 ms-4" style="display:none;">
-                                                <input type="text" class="form-control form-control-sm" id="granularity" placeholder="Granularity (e.g., Fine)">
-                                            </div>
-                                        </div>
-
-                                        <!-- Engraving Option -->
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="checkbox" id="addEngraving" onchange="toggleOption('engraving')">
-                                            <label class="form-check-label" for="addEngraving">
-                                                <i class="bi bi-pen"></i> Add Engraving
-                                            </label>
-                                            <div id="engraving-options" class="mt-2 ms-4" style="display:none;">
-                                                <div class="mb-2">
-                                                    <input type="text" class="form-control form-control-sm" id="engravingText" placeholder="Text to engrave">
-                                                </div>
-                                                <div class="mb-2">
-                                                    <input type="text" class="form-control form-control-sm" id="engravingFont" placeholder="Font (e.g., Arial)">
-                                                </div>
-                                                <div class="mb-2">
-                                                    <input type="text" class="form-control form-control-sm" id="engravingImage" placeholder="Image path (optional)">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-check-circle"></i> Create Order
-                                </button>
-                            </form>
-                            <div id="create-message" class="alert mt-3 d-none"></div>
+                    
+                    <!-- Étape 1: Prix de base -->
+                    <div id="step-base-price" class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Step 1: Base Price</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="basePrice" class="form-label">Base Price (€)</label>
+                                <input type="number" class="form-control" id="basePrice" step="0.01" min="0" required>
+                            </div>
+                            <button class="btn btn-primary" onclick="startOrder()">Start Order</button>
                         </div>
                     </div>
+
+                    <!-- Étape 2: Demandes d'impression -->
+                    <div id="step-print-requests" class="card mb-4" style="display:none;">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Step 2: Print Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="current-print-request">
+                                <h6>Print Request #<span id="request-number">1</span></h6>
+                                <div class="mb-3">
+                                    <label for="stlPath" class="form-label">STL File Path</label>
+                                    <input type="text" class="form-control" id="stlPath" placeholder="path/to/file.stl" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="note" class="form-label">Note (optional)</label>
+                                    <textarea class="form-control" id="note" rows="2" placeholder="Any special instructions..."></textarea>
+                                </div>
+                                <button class="btn btn-success" onclick="addPrintRequest()">Add Print Request</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 3: Options -->
+                    <div id="step-options" class="card mb-4" style="display:none;">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Step 3: Options for Request #<span id="options-request-number">1</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Select options to add:</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" onclick="showOptionForm('paint')">
+                                    <i class="bi bi-palette"></i> Add Paint Job
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="showOptionForm('smoothing')">
+                                    <i class="bi bi-magic"></i> Add Smoothing
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="showOptionForm('engraving')">
+                                    <i class="bi bi-pen"></i> Add Engraving
+                                </button>
+                                <button class="btn btn-warning" onclick="finishOptions()">
+                                    Done with Options
+                                </button>
+                            </div>
+
+                            <!-- Paint Option Form -->
+                            <div id="paint-form" class="mt-3" style="display:none;">
+                                <h6>Paint Job Details</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <input type="text" class="form-control" id="paintColor" placeholder="Color (e.g., Red)">
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <input type="number" class="form-control" id="paintLayers" placeholder="Number of layers" min="1">
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-success" onclick="addPaintOption()">Add Paint</button>
+                                <button class="btn btn-sm btn-secondary" onclick="hideOptionForm('paint')">Cancel</button>
+                            </div>
+
+                            <!-- Smoothing Option Form -->
+                            <div id="smoothing-form" class="mt-3" style="display:none;">
+                                <h6>Smoothing Details</h6>
+                                <input type="text" class="form-control mb-2" id="granularity" placeholder="Granularity (e.g., Fine)">
+                                <button class="btn btn-sm btn-success" onclick="addSmoothingOption()">Add Smoothing</button>
+                                <button class="btn btn-sm btn-secondary" onclick="hideOptionForm('smoothing')">Cancel</button>
+                            </div>
+
+                            <!-- Engraving Option Form -->
+                            <div id="engraving-form" class="mt-3" style="display:none;">
+                                <h6>Engraving Details</h6>
+                                <input type="text" class="form-control mb-2" id="engravingText" placeholder="Text to engrave">
+                                <input type="text" class="form-control mb-2" id="engravingFont" placeholder="Font (e.g., Arial)">
+                                <input type="text" class="form-control mb-2" id="engravingImage" placeholder="Image path (optional)">
+                                <button class="btn btn-sm btn-success" onclick="addEngravingOption()">Add Engraving</button>
+                                <button class="btn btn-sm btn-secondary" onclick="hideOptionForm('engraving')">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 4: Confirmation -->
+                    <div id="step-confirm" class="card mb-4" style="display:none;">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Step 4: Confirm Order</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Add another print request?</p>
+                            <button class="btn btn-primary" onclick="addAnotherRequest()">Yes, Add Another</button>
+                            <button class="btn btn-success" onclick="finalizeOrder()">No, Finalize Order</button>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div id="create-message" class="alert mt-3 d-none"></div>
                 </section>
+
 
                 <!-- Pay Order Section -->
                 <section id="pay-section" class="section" style="display:none;">
