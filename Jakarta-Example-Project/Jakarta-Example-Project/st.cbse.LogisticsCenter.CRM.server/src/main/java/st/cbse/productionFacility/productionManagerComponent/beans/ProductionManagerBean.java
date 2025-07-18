@@ -24,7 +24,7 @@ public class ProductionManagerBean implements IProductionManagerMgmt {
 
     @PostConstruct
     public void initProductionManager() {
-        if (em.find(ProductionManager.class, "prodManager") == null) {
+        if (em.find(ProductionManager.class, "prodManager@gmail.com") == null) {
             em.persist(new ProductionManager("prodManager@gmail.com", "prodManager"));
         }
     }

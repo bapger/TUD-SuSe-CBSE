@@ -27,7 +27,7 @@ public class ProdManagerREST {
 
 
     @POST
-    @Path("/prodManager/login")
+    @Path("login")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response login(
             @FormParam("email") String email,

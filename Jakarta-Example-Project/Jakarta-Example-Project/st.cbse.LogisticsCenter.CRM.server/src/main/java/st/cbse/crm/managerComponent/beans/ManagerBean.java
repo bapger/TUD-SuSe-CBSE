@@ -31,8 +31,8 @@ public class ManagerBean implements IManagerMgmt {
 
     @PostConstruct
     public void initManager() {
-        if (em.find(Manager.class, "admin") == null) {
-            em.persist(new Manager("admin", "admin"));
+        if (em.find(Manager.class, "admin@gmail.com") == null) {
+            em.persist(new Manager("admin@gmail.com", "admin"));
         }
     }
 
