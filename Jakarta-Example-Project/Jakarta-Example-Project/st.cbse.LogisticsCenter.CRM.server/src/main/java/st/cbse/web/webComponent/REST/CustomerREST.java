@@ -31,13 +31,13 @@ public class CustomerREST {
         
         try {
             UUID customerId = customerMgmt.loginCustomer(email, password);
-            // Rediriger vers le dashboard customer
+
             return Response.seeOther(
             	    java.net.URI.create("../customer-dashboard.html?id=" + customerId)
             	).build();
 
         } catch (Exception e) {
-            // Rediriger vers login avec message d'erreur
+
             return Response.seeOther(
                 java.net.URI.create("../login.html?role=customer&error=invalid")
             ).build();
@@ -54,23 +54,23 @@ public class CustomerREST {
             @FormParam("confirmPassword") String confirmPassword) {
         
         try {
-            // Vérifier que les mots de passe correspondent
+
             if (!password.equals(confirmPassword)) {
                 return Response.seeOther(
                     java.net.URI.create("../register.html?error=passwordMismatch")
                 ).build();
             }
             
-            // Enregistrer le nouveau client
+
             UUID customerId = customerMgmt.registerCustomer(fullName, email, password);
             
-            // Rediriger vers la page de login avec message de succès
+
             return Response.seeOther(
                 java.net.URI.create("../login.html?role=customer&success=registered")
             ).build();
             
         } catch (Exception e) {
-            // Rediriger vers register avec message d'erreur
+
             return Response.seeOther(
                 java.net.URI.create("../register.html?error=registrationFailed")
             ).build();

@@ -25,7 +25,7 @@ public class ProdManagerREST {
     @EJB
     IProcessMgmt processMgmt;
 
-    // === Login ===
+
     @POST
     @Path("/prodManager/login")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)

@@ -19,7 +19,7 @@
                         </div>
 
                         <form id="loginForm" method="POST" action="">
-                            <!-- Select visible uniquement si pas de rôle dans l'URL -->
+
                             <div class="mb-3" id="userTypeDiv">
                                 <label for="userType" class="form-label">User Type</label>
                                 <select class="form-select" id="userType" name="userType" required onchange="updateFormAction()">
@@ -64,10 +64,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Base URL for REST API
+
         const BASE_URL = "http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api";
         
-        // Fonction pour mettre à jour l'action du formulaire
+
         function updateFormAction() {
             const userType = document.getElementById('userType').value;
             const form = document.getElementById('loginForm');
@@ -92,15 +92,15 @@
         const role = urlParams.get('role');
         
         if (role) {
-            // Remplacer le select par un input hidden
+
             document.getElementById('userTypeDiv').innerHTML = 
                 `<input type="hidden" name="userType" value="${role}">
                  <p class="text-muted">Logging in as ${role} - <a href="login.html">Change role</a></p>`;
             
-            // Afficher le lien pour changer de rôle
+
             document.getElementById('change-role-link').classList.remove('d-none');
             
-            // Personnaliser l'interface selon le rôle
+
             const loginTitle = document.getElementById('login-title');
             const loginButton = document.getElementById('loginButton');
             const roleIcon = document.getElementById('role-icon');

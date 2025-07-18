@@ -29,7 +29,7 @@ public class OrderREST {
     @EJB
     IOrderMgmt orderMgmt;
 
-    // Get all orders : Manager only
+
     @GET
     @Path("getOrders")
     @Produces("application/json")
@@ -37,7 +37,7 @@ public class OrderREST {
         return convertOrderDTOListToJson(orderMgmt.fetchAllOrderDTOs(),orderMgmt);
     }
 
-    // get customer's orders : Customer and Manager
+
     @GET
     @Path("getOrdersByCustomer/{customerId}")
     @Produces("application/json")
@@ -55,8 +55,6 @@ public class OrderREST {
         return convertOrderDTOListToJson(customerOrders,orderMgmt);
     }
 
-    // Access html form :
-    // file:///H:/Documents/GitHub/TUD-SuSe-CBSE/Jakarta-Example-Project/Jakarta-Example-Project/st.cbse.LogisticsCenter.CRM.server/src/main/webapp/createOrderForm.html
 
     @POST
     @Path("create")
@@ -212,7 +210,6 @@ public class OrderREST {
     }
 
 	public static Object createError(String message) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

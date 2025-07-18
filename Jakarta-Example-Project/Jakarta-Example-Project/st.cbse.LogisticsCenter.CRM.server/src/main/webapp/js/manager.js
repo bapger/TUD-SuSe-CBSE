@@ -1,11 +1,9 @@
 const BASE_URL = "http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api";
 
-// Load all orders on page load
 document.addEventListener("DOMContentLoaded", () => {
   loadManagerOrders();
 });
 
-// Load manager orders
 function loadManagerOrders() {
   fetch(`${BASE_URL}/manager/orders`)
     .then(res => res.json())
@@ -21,7 +19,6 @@ function loadManagerOrders() {
     });
 }
 
-// Render order cards with printing requests and actions
 function renderOrders(container, orders) {
   if (!orders.length) {
     container.innerHTML = `<div class="alert alert-info">No orders found</div>`;
@@ -81,7 +78,6 @@ function renderOrders(container, orders) {
   }).join('');
 }
 
-// Add note to request
 async function addNoteToRequest(requestId) {
   const note = prompt("Enter a note:");
   if (!note) return;
@@ -99,7 +95,6 @@ async function addNoteToRequest(requestId) {
   }
 }
 
-// Send order to production
 async function sendToProduction(orderId) {
   try {
     await fetch(`${BASE_URL}/manager/sendToProduction/${orderId}`, {
@@ -112,7 +107,6 @@ async function sendToProduction(orderId) {
   }
 }
 
-// Ship finished order and create invoice
 async function shipOrder(orderId, total) {
   try {
     await fetch(`${BASE_URL}/manager/ship/${orderId}`, { method: 'POST' });
@@ -158,7 +152,6 @@ function loadStorage() {
     });
 }
 
-// Helpers
 function formatDate(isoDate) {
   const date = new Date(isoDate);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();

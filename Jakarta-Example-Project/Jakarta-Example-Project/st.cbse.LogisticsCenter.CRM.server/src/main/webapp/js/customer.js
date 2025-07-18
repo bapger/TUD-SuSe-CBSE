@@ -1,36 +1,34 @@
-// Variables globales
 let currentOrders = [];
 let unpaidOrders = [];
 let currentOrderId = null;
 let currentRequestId = null;
 let requestCounter = 0;
-// Base URL for REST API
 const BASE_URL = "http://localhost:8080/st.cbse.LogisticsCenter.CRM.server/rest-api";
 
 
-// Initialisation au chargement de la pagex
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Stocker l'ID du client depuis l'URL si présent
+
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('id');
     if (customerId) {
         sessionStorage.setItem('customerId', customerId);
     }
     
-    // Vérifier si le client est connecté
+
     if (!getCustomerId()) {
         window.location.href = 'login.html';
         return;
     }
     
-    // Charger les commandes
+
     loadOrders();
     
-    // Masquer tous les formulaires d'étapes sauf le premier
+
     resetOrderForm();
 });
 
-// Fonction pour charger les commandes
+
 async function loadOrders() {
     const ordersList = document.getElementById('orders-list');
     const customerId = getCustomerId();
@@ -53,7 +51,7 @@ async function loadOrders() {
     }
 }
 
-// Fonction pour afficher les commandes
+
 function displayOrders(orders) {
     const ordersList = document.getElementById('orders-list');
     
@@ -106,9 +104,7 @@ function displayOrders(orders) {
     ordersList.innerHTML = html;
 }
 
-// ========== CRÉATION DE COMMANDE ==========
 
-// Fonction pour démarrer une nouvelle commande
 async function startOrder() {
     const basePrice = document.getElementById('basePrice').value;
     if (!basePrice) {
@@ -131,7 +127,7 @@ async function startOrder() {
 
 
         const result = await response.text();
-        // Extraire l'ID de la commande de la réponse
+
         const uuidMatch = result.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
         if (uuidMatch) {
             currentOrderId = uuidMatch[0];
@@ -187,14 +183,14 @@ async function addPrintRequest() {
 }
 
 
-// Fonctions pour gérer les options
+
 function showOptionForm(optionType) {
-    // Cacher tous les formulaires d'options
+
     document.getElementById('paint-form').style.display = 'none';
     document.getElementById('smoothing-form').style.display = 'none';
     document.getElementById('engraving-form').style.display = 'none';
     
-    // Afficher le formulaire demandé
+
     document.getElementById(optionType + '-form').style.display = 'block';
 }
 
@@ -373,20 +369,20 @@ function resetOrderForm() {
     document.getElementById('create-message').classList.add('d-none');
 }
 
-// Function to load unpaid invoices for SHIPPED orders
+
 function loadUnpaidOrders() {
     const selectElement = document.getElementById('unpaidOrders');
     
-    // Filter SHIPPED orders with unpaid invoices
+
     unpaidOrders = currentOrders.filter(order => 
         order.status === 'SHIPPED' && order.hasUnpaidInvoice === true
     );
 	console.log(currentOrders);
 
-    // Reset the dropdown
+
     selectElement.innerHTML = '<option value="">Choose an unpaid invoice...</option>';
 
-    // Populate dropdown
+
     unpaidOrders.forEach(order => {
         const option = document.createElement('option');
         option.value = order.id;
@@ -394,14 +390,14 @@ function loadUnpaidOrders() {
         selectElement.appendChild(option);
     });
 
-    // If none found
+
     if (unpaidOrders.length === 0) {
         selectElement.innerHTML = '<option value="">No unpaid invoices</option>';
     }
 }
 
 
-// Fonction pour afficher les détails de la commande sélectionnée
+
 function showOrderDetails() {
     const selectElement = document.getElementById('unpaidOrders');
     const orderId = selectElement.value;
@@ -427,7 +423,7 @@ function showOrderDetails() {
 			    }
 			}
 
-			// Fonction pour gérer le paiement
+
 			async function handlePayOrder(event) {
 			    event.preventDefault();
 			    
@@ -436,7 +432,7 @@ function showOrderDetails() {
 			    const transactionRef = document.getElementById('transactionRef').value;
 				const formData = new URLSearchParams();
 				formData.append('transactionRef', transactionRef);
-				formData.append('orderId', orderId); // needed since your endpoint expects this too
+				formData.append('orderId', orderId); 
 
 			    
 			    if (!orderId) {
@@ -460,11 +456,11 @@ function showOrderDetails() {
 			            messageDiv.textContent = 'Payment processed successfully!';
 			            messageDiv.classList.remove('d-none');
 			            
-			            // Réinitialiser le formulaire
+
 			            document.getElementById('payOrderForm').reset();
 			            document.getElementById('order-details').classList.add('d-none');
 			            
-			            // Recharger les commandes après 2 secondes
+
 			            setTimeout(() => {
 			                showSection('orders');
 			                messageDiv.classList.add('d-none');
@@ -481,9 +477,7 @@ function showOrderDetails() {
 			    }
 			}
 
-			// ========== EVENT LISTENERS ==========
 
-			// Attacher les fonctions aux éléments globaux du window pour les appels onclick dans le HTML
 			window.startOrder = startOrder;
 			window.addPrintRequest = addPrintRequest;
 			window.showOptionForm = showOptionForm;
@@ -499,7 +493,7 @@ function showOrderDetails() {
 			window.showOrderDetails = showOrderDetails;
 			window.logout = logout;
 
-			// Setup du formulaire de paiement
+
 			document.addEventListener('DOMContentLoaded', function() {
 			    const payOrderForm = document.getElementById('payOrderForm');
 			    if (payOrderForm) {
